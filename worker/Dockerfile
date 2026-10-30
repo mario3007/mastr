@@ -16,7 +16,8 @@ WORKDIR /app
 
 # Copy and install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Pre-download AudioSR model weights during Docker build to minimize RunPod cold start latency
 RUN python -c "from audiosr import build_model; build_model(model_name='basic')"
