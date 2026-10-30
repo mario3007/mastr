@@ -4,10 +4,12 @@
 
 export interface MasterJobRecord {
   jobId: string;
+  runpodJobId?: string;
   fileKey: string;
   outputKey: string;
   preset: string;
-  durationSeconds: number;
+  status?: string;
+  durationSeconds?: number;
   createdAt: number;
 }
 

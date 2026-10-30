@@ -204,8 +204,25 @@ def handler(event: dict) -> dict:
         download_file(download_url, input_file)
 
         # 2. Branch according to preset
-        if preset == "suno_enhancer":
+        if preset in ["suno_enhancer", "audiosr"]:
             process_suno_enhancer(input_file, final_output_file)
+        elif preset in ["full", "ai_full", "full_chain"]:
+            logger.info("Running AI Full Chain: AudioSR Enhancement -> Matchering -> Limiter...")
+            sr_intermediate = os.path.join(temp_dir, "sr_intermediate.wav")
+            temp_files.append(sr_intermediate)
+            process_suno_enhancer(input_file, sr_intermediate)
+            target_reference = resolve_target_file("standard")
+            mg.process(
+                target=sr_intermediate,
+                reference=target_reference,
+                results=[mg.pcm24(matchered_file)],
+            )
+            apply_pedalboard_limiting(
+                input_path=matchered_file,
+                output_path=final_output_file,
+                target_lufs=-14.0,
+                true_peak_ceiling_db=-1.0,
+            )
         else:
             target_reference = resolve_target_file(preset)
             logger.info(f"Using matchering target reference: {target_reference}")

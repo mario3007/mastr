@@ -1,0 +1,118 @@
+'use client';
+
+import React from 'react';
+import { useTranslations } from 'next-intl';
+import { Sparkles, Bot, Cpu, CheckCircle2, Info } from 'lucide-react';
+
+export type AiPresetId = 'audiosr' | 'matchering' | 'full';
+
+interface AiTilesProps {
+  selectedPreset: AiPresetId;
+  onSelectPreset: (preset: AiPresetId) => void;
+}
+
+export const AiTiles: React.FC<AiTilesProps> = ({
+  selectedPreset,
+  onSelectPreset,
+}) => {
+  const tAi = useTranslations('aiEngine');
+
+  const aiPresets: Array<{
+    id: AiPresetId;
+    icon: React.ReactNode;
+    glowClass: string;
+    borderGlow: string;
+  }> = [
+    {
+      id: 'audiosr',
+      icon: <Bot className="h-5 w-5 text-accent-purple" />,
+      glowClass: 'text-accent-purple',
+      borderGlow: 'border-accent-purple/60 shadow-accent-purple/20',
+    },
+    {
+      id: 'matchering',
+      icon: <Cpu className="h-5 w-5 text-accent-cyan" />,
+      glowClass: 'text-accent-cyan',
+      borderGlow: 'border-accent-cyan/60 shadow-accent-cyan/20',
+    },
+    {
+      id: 'full',
+      icon: <Sparkles className="h-5 w-5 text-amber-400" />,
+      glowClass: 'text-amber-400',
+      borderGlow: 'border-amber-400/60 shadow-amber-400/20',
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {/* AI Explanation / Notice Banner */}
+      <div className="flex items-start sm:items-center gap-3 rounded-2xl bg-gradient-to-r from-accent-purple/15 via-studio-900 to-accent-cyan/15 border border-accent-purple/30 p-3.5 sm:p-4 text-xs font-mono text-studio-300 shadow-xl">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-purple/20 border border-accent-purple/40 text-accent-purple">
+          <Info className="h-4 w-4" />
+        </div>
+        <p className="leading-relaxed font-sans text-xs sm:text-sm text-studio-200">
+          {tAi('notice')}
+        </p>
+      </div>
+
+      {/* 3 AI Option Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {aiPresets.map((item) => {
+          const isSelected = selectedPreset === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onSelectPreset(item.id)}
+              className={`group relative flex flex-col justify-between rounded-2xl border p-5 text-left transition-all cursor-pointer ${
+                isSelected
+                  ? `bg-studio-850 border-accent-cyan shadow-xl ${item.borderGlow} ring-1 ring-accent-cyan`
+                  : 'bg-studio-900/80 border-studio-700/80 hover:border-studio-600 hover:bg-studio-850'
+              }`}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-studio-800 border border-studio-700 shadow-inner">
+                    {item.icon}
+                  </div>
+                  <span className="rounded-full bg-studio-800/90 px-3 py-1 text-[11px] font-mono font-semibold text-accent-cyan border border-studio-700">
+                    {tAi(`${item.id}.tag` as any)}
+                  </span>
+                </div>
+
+                <h4 className="text-sm sm:text-base font-bold text-white mb-2 group-hover:text-accent-cyan transition-colors">
+                  {tAi(`${item.id}.title` as any)}
+                </h4>
+
+                <p className="text-xs text-studio-400 leading-relaxed font-sans">
+                  {tAi(`${item.id}.desc` as any)}
+                </p>
+              </div>
+
+              <div className="mt-5 flex items-center justify-between pt-3 border-t border-studio-800">
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className={`h-2 w-2 rounded-full ${
+                      isSelected ? 'bg-accent-cyan animate-pulse' : 'bg-studio-600'
+                    }`}
+                  />
+                  <span
+                    className={`text-[10px] font-mono uppercase tracking-wider ${
+                      isSelected ? 'text-accent-cyan font-bold' : 'text-studio-500'
+                    }`}
+                  >
+                    {isSelected ? tAi('activeBadge') : tAi('selectBadge')}
+                  </span>
+                </div>
+
+                {isSelected && (
+                  <CheckCircle2 className="h-4 w-4 text-accent-cyan animate-fade-in" />
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};

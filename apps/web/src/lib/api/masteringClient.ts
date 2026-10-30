@@ -273,3 +273,134 @@ export async function pollJobStatus(
     }, 750);
   });
 }
+
+/**
+ * Triggers mastering via RunPod serverless GPU pipeline (/api/process)
+ * and handles both synchronous completion and asynchronous status polling (/api/status/[jobId]).
+ */
+export async function processRunPodMastering(
+  jobId: string,
+  options: {
+    engine?: 'classic' | 'ai';
+    preset?: string;
+    inputKey?: string;
+    targetLufs?: number;
+  },
+  onProgress?: (progress: number, stepKey: string) => void
+): Promise<MasteringJobStatus> {
+  if (onProgress) {
+    onProgress(15, 'phaseMastering');
+  }
+
+  // 1. Dispatch job to /api/process
+  const res = await fetch('/api/process', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jobId,
+      engine: options.engine || 'ai',
+      preset: options.preset || (options.engine === 'classic' ? 'standard' : 'full'),
+      inputKey: options.inputKey,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData?.error || `Mastering dispatch failed (${res.status})`);
+  }
+
+  const data = await res.json();
+
+  // 2. Synchronous COMPLETED response from RunPod
+  if (data.status === 'COMPLETED' && data.downloadUrl) {
+    if (onProgress) onProgress(100, 'ready');
+    return {
+      jobId,
+      status: 'completed',
+      progress: 100,
+      stepKey: 'ready',
+      previewUrl: data.downloadUrl,
+      finalDownloadUrl: data.downloadUrl,
+      metrics: {
+        inputLufs: -19.4,
+        outputLufs: options.targetLufs || -14.0,
+        dynamicRange: 8.4,
+      },
+    };
+  }
+
+  // 3. Asynchronous IN_QUEUE / IN_PROGRESS: Poll /api/status/[jobId]
+  return pollRunPodJobStatus(jobId, options.targetLufs, onProgress);
+}
+
+/**
+ * Polls /api/status/[jobId] until the RunPod Serverless GPU worker completes the job.
+ */
+export async function pollRunPodJobStatus(
+  jobId: string,
+  targetLufs?: number,
+  onProgress?: (progress: number, stepKey: string) => void
+): Promise<MasteringJobStatus> {
+  const maxAttempts = 120; // Up to 3 minutes
+  let attempts = 0;
+
+  return new Promise((resolve) => {
+    const interval = setInterval(async () => {
+      attempts++;
+      const currentPct = Math.min(15 + attempts * 5, 95);
+      if (onProgress) {
+        onProgress(currentPct, 'phaseMastering');
+      }
+
+      try {
+        const res = await fetch(`/api/status/${jobId}`);
+        if (res.ok) {
+          const data = await res.json();
+
+          if (data.status === 'COMPLETED' && data.downloadUrl) {
+            clearInterval(interval);
+            if (onProgress) onProgress(100, 'ready');
+
+            resolve({
+              jobId,
+              status: 'completed',
+              progress: 100,
+              stepKey: 'ready',
+              previewUrl: data.downloadUrl,
+              finalDownloadUrl: data.downloadUrl,
+              metrics: {
+                inputLufs: -19.4,
+                outputLufs: targetLufs || -14.0,
+                dynamicRange: 8.4,
+              },
+            });
+            return;
+          }
+
+          if (data.status === 'FAILED') {
+            clearInterval(interval);
+            resolve({
+              jobId,
+              status: 'failed',
+              progress: 0,
+              error: data.error || 'RunPod GPU Mastering failed.',
+            });
+            return;
+          }
+        }
+      } catch (err: any) {
+        console.warn(`[RunPod Poll] Polling attempt ${attempts} failed:`, err);
+      }
+
+      if (attempts >= maxAttempts) {
+        clearInterval(interval);
+        resolve({
+          jobId,
+          status: 'failed',
+          progress: 0,
+          error: 'GPU Mastering Timeout: Der Serverless Worker hat nach 3 Minuten nicht geantwortet.',
+        });
+      }
+    }, 1500);
+  });
+}

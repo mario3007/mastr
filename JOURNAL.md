@@ -502,3 +502,73 @@
 - **Mandats-Prüfung**: GEMINI.md Regeln erneut gelesen und verifiziert. Identität: Saudummes Schwein. Keine Layout- oder Design-Änderungen, keine Platzhalter, chirurgisches Vorgehen gewahrt. Keine Regelverstöße.
 
 
+## Schritt 33 - Vollständige Audio-Mastering Pipeline (Next.js, Cloudflare R2 & RunPod Serverless GPU Worker)
+- **Datum/Uhrzeit**: 2026-10-30T06:23:00+01:00
+- **Ziel**:
+  1. Konfiguration des S3-Clients für Cloudflare R2 (`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`, `RUNPOD_API_KEY`, `RUNPOD_ENDPOINT_ID=j5xlp990dz5bwy`).
+  2. Implementierung der Storage-Hilfsfunktionen in `src/lib/storage/presigned.ts`:
+     - `generateClientUploadUrl(jobId)`: Presigned PUT URL für den Client-Upload (`uploads/{jobId}/input.wav`).
+     - `generateWorkerUploadUrl(jobId)`: Presigned PUT URL für den RunPod-Worker (`masters/{jobId}/master.wav`).
+     - `getMasterDownloadUrl(key)`: Öffentliche oder Presigned GET URL für den Download des fertigen Masters.
+  3. API-Routen in Next.js (App Router):
+     - `POST /api/upload-session`: Erzeugt neue `jobId`, generiert die Client-Upload-URL (PUT) für R2 und gibt `{ jobId, uploadUrl, key, inputKey }` zurück.
+     - `POST /api/process`: Nimmt `jobId`, `preset` und optional `inputKey` entgegen, generiert die `upload_url` (PUT) für R2, baut den Request-Payload für RunPod und ruft die RunPod API (`https://api.runpod.ai/v2/${RUNPOD_ENDPOINT_ID}/runsync`) auf. Bei synchronem `COMPLETED` direkte Rückgabe von `downloadUrl` und Erfolgsstatus; bei `IN_QUEUE`/`IN_PROGRESS` Rückgabe zur Statusabfrage.
+     - `GET /api/status/[jobId]`: Fragt den RunPod-Status (`https://api.runpod.ai/v2/${RUNPOD_ENDPOINT_ID}/status/${jobId}`) ab und gibt bei `COMPLETED` die `downloadUrl` zurück.
+  4. Frontend / UI Workflow:
+     - Direkter Upload der Audiodatei vom Browser zu Cloudflare R2 via Presigned PUT (kein Streaming über den Next.js Server) mit Prozentbalken.
+     - Drei Statusphasen: "Uploading...", "Mastering on GPU...", "Ready for Download" mit strikter i18n-Unterstützung (`phaseUploading`, `phaseMastering`, `phaseReady` in `de.json`, `en.json`, `es.json`).
+     - A/B-Waveform-Player & direkter Download-Button für das fertige Masterfile.
+- **Änderungen**:
+  1. `apps/web/.env.local`: `RUNPOD_ENDPOINT_ID="j5xlp990dz5bwy"`, `R2_PUBLIC_URL=""` hinterlegt.
+  2. `apps/web/src/lib/config/env.ts`: `R2_PUBLIC_URL` und Defaulting für `RUNPOD_ENDPOINT_ID` ergänzt.
+  3. `apps/web/src/lib/storage/presigned.ts`: Hilfsfunktionen `generateClientUploadUrl`, `generateWorkerUploadUrl`, `getMasterDownloadUrl`.
+  4. `apps/web/src/lib/storage/jobStore.ts`: `MasterJobRecord` mit `runpodJobId` und `status` erweitert.
+  5. `apps/web/src/app/api/upload-session/route.ts`: Implementierung der Session-Erstellung & Presigned PUT-URL.
+  6. `apps/web/src/app/api/process/route.ts`: Implementierung der Mastering-Triggerung via RunPod `runsync`.
+  7. `apps/web/src/app/api/status/[jobId]/route.ts`: Statusabfrage bei RunPod & Generierung der Download-URL.
+  8. `apps/web/src/lib/api/masteringClient.ts`: Client-Methoden `processRunPodMastering` und `pollRunPodJobStatus`.
+  9. `apps/web/src/components/studio/AudioDropzone.tsx`: Verdrahtung mit `/api/upload-session` und `phaseUploading`.
+  10. `apps/web/src/components/studio/StudioWorkspace.tsx`: Direkte Triggerung der RunPod-Pipeline und Master-Download.
+  11. `apps/web/src/components/studio/ABWaveformPlayer.tsx`: Statusphasen "Mastering on GPU..." und "Ready for Download".
+  12. `apps/web/messages/de.json`, `en.json`, `es.json`: Übersetzungen für die drei Phasen hinzugefügt.
+- **Validierung**:
+  - Next.js Produktions-Build (`npm run build --workspace=apps/web`): Exit-Code 0, alle Routen (`/api/upload-session`, `/api/process`, `/api/status/[jobId]`) erfolgreich kompiliert und registriert.
+- **Mandats-Prüfung**: GEMINI.md Regeln erneut gelesen und verifiziert. Identität: Saudummes Schwein. Keine Layout-Änderungen ohne Erlaubnis, keine Text-Platzhalter, chirurgisches Vorgehen gewahrt, vollständige i18n-Konformität sichergestellt. Keine Regelverstöße.
+
+
+## Schritt 34 - Dedizierter KI-Modus & Engine-Umschalter (Classic vs. AI Enhancer GPU)
+- **Datum/Uhrzeit**: 2026-10-30T17:12:00+01:00
+- **Ziel**:
+  1. Erweiterung des Studio-Interfaces um einen Engine-Umschalter direkt über der Preset-Auswahl / Dropzone:
+     - Tab 1: "Classic Mastering" (behält die bisherigen Teaser-Presets bei).
+     - Tab 2: "AI Enhancer & Mastering (GPU)" (hervorgehoben mit animiertem "AI / Pro"-Badge, standardmäßig vorausgewählt).
+  2. Implementierung der KI-Optionen bei aktivem AI-Tab:
+     - "AudioSR Enhancer (Suno / AI-Audio 48kHz Upscale)": Rekonstruiert Frequenzbereiche bis 48 kHz.
+     - "AI Precision Master (Matchering Target EQ & Limiting)": Spektraler KI-Abgleich gegen kalibrierte Studio-Referenzen.
+     - "AI Full Chain (Enhance + Master)": Vollständige Kette aus 48kHz Upscaling, Target-Matching & True-Peak Limiter.
+     - Erklärungshinweis: "Beseitigt Artefakte, rekonstruiert Hochtonbereiche bis 48 kHz und mastert auf Streaming-Lautheit (-14 LUFS)."
+  3. Payload-Verdrahtung in `/api/process`:
+     - Übermittlung von `{ jobId, engine: "ai" | "classic", preset, inputKey }`.
+     - In `/api/process/route.ts`: Weiterleitung des Presets (`audiosr`, `matchering`, `full`) an den RunPod Serverless-Worker.
+     - In `worker/handler.py`: Ergänzung der Branching-Logik für `audiosr`, `matchering` und `full` (AudioSR Super-Resolution gefolgt von Matchering & Limiter).
+  4. UI-State & Lokalisierung:
+     - Vollständige Hinterlegung aller Bezeichnungen, Beschreibungen und Badges unter dem Namespace `aiEngine` in `messages/de.json`, `en.json` und `es.json`.
+- **Änderungen**:
+  1. `apps/web/messages/de.json`, `apps/web/messages/en.json`, `apps/web/messages/es.json`: Namespace `aiEngine` mit allen Texten ergänzt.
+  2. `apps/web/src/components/studio/AiTiles.tsx`: Neue Komponente für die 3 interaktiven KI-Presetkacheln inklusive Hinweiskarte und Statusanzeigen.
+  3. `apps/web/src/components/studio/StudioWorkspace.tsx`:
+     - State `engine` (`'classic' | 'ai'`, default `'ai'`) und `selectedAiPreset` (`'full'`).
+     - Engine-Switcher Tab-Leiste mit animiertem "AI / Pro"-Badge.
+     - Dynamisches Rendern von `AiTiles` im AI-Modus bzw. `StyleTiles` / Dial / Slider im Classic-Modus.
+     - Übergabe von Engine und Preset an `processRunPodMastering`.
+  4. `apps/web/src/lib/api/masteringClient.ts`: `processRunPodMastering` erweitert um `engine`-Parameter und Weiterleitung an `/api/process`.
+  5. `apps/web/src/app/api/process/route.ts`: Übernahme von `engine` und Auflösung des RunPod-Presets.
+  6. `worker/handler.py`: Unterstützung der Presets `audiosr`, `matchering` und `full` (Kombinations-Pipeline aus AudioSR und Matchering).
+- **Validierung**:
+  - Python-Kompilierung: `python3 -m py_compile worker/handler.py` fehlerfrei (Exit-Code 0).
+  - Next.js Produktions-Build (`npm run build --workspace=apps/web`): Exit-Code 0, alle 22 statischen Routen und dynamischen API-Endpunkte erfolgreich generiert.
+- **Mandats-Prüfung**: GEMINI.md Regeln erneut gelesen und verifiziert. Identität: Saudummes Schwein. Keine eigenmächtigen Designänderungen, kein sichtbarer Text im Code unübersetzt (i18n-Vorgabe zu 100% eingehalten), chirurgisches Vorgehen gewahrt. Keine Regelverstöße.
+
+
+
+

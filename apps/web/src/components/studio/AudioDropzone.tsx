@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { UploadCloud, Link as LinkIcon, Music2, Sparkles, Play, Loader2, AlertCircle, RotateCw } from 'lucide-react';
 
 export interface R2UploadData {
+  jobId?: string;
   fileKey: string;
   uploadUrl: string;
 }
@@ -39,8 +40,8 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
     setCurrentUploadingFile(file);
 
     try {
-      // 1. Request presigned PUT URL from our Next.js API route
-      const res = await fetch('/api/r2/upload-url', {
+      // 1. Request presigned PUT URL and jobId from our Next.js API route
+      const res = await fetch('/api/upload-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -51,10 +52,11 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData?.error || 'Failed to get upload URL');
+        throw new Error(errorData?.error || 'Failed to get upload session');
       }
 
-      const { uploadUrl, fileKey } = await res.json();
+      const { uploadUrl, key, inputKey, jobId } = await res.json();
+      const fileKey = key || inputKey;
       if (!uploadUrl) {
         throw new Error('No uploadUrl returned from storage API');
       }
@@ -88,7 +90,7 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
       });
 
       setIsUploading(false);
-      onFileSelect(file, { fileKey, uploadUrl });
+      onFileSelect(file, { jobId, fileKey, uploadUrl });
     } catch (err: any) {
       console.error('R2 Direct Upload Error:', err);
       setIsUploading(false);
@@ -162,6 +164,10 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
               <Loader2 className="h-8 w-8 text-accent-cyan animate-spin" />
             </div>
             <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-[11px] font-mono font-semibold mb-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent-cyan animate-pulse" />
+                {t('phaseUploading')}
+              </div>
               <h3 className="text-base md:text-lg font-bold text-white mb-1">
                 {t('uploadingToStorage')}
               </h3>

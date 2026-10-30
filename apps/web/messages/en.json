@@ -44,6 +44,9 @@
   "player": {
     "dropzoneTitle": "Drop audio file here or browse",
     "dropzoneSubtitle": "Supports WAV, MP3, FLAC & AIFF (up to 250 MB)",
+    "phaseUploading": "Uploading...",
+    "phaseMastering": "Mastering on GPU...",
+    "phaseReady": "Ready for Download",
     "uploadingToStorage": "Uploading to Cloudflare R2 storage...",
     "uploadProgress": "Cloud Upload ({progress}%)...",
     "uploadError": "Upload to Cloudflare R2 failed. Please try again.",
@@ -283,5 +286,28 @@
     "badge_quality": "24-Bit / 44.1 kHz HD PCM",
     "badge_broadcast": "Broadcast & Streaming Ready",
     "downloading": "Starting download..."
+  },
+  "aiEngine": {
+    "tabClassic": "Classic Mastering",
+    "tabAi": "AI Enhancer & Mastering (GPU)",
+    "badgeAiPro": "AI / Pro",
+    "notice": "Beseitigt Artefakte, rekonstruiert Hochtonbereiche bis 48 kHz und mastert auf Streaming-Lautheit (-14 LUFS).",
+    "activeBadge": "Active",
+    "selectBadge": "Select",
+    "audiosr": {
+      "title": "AudioSR Enhancer (Suno / AI-Audio 48kHz Upscale)",
+      "desc": "Removes AI artifacts, de-noises and reconstructs high frequencies up to 48 kHz in studio quality.",
+      "tag": "48 kHz Upscale"
+    },
+    "matchering": {
+      "title": "AI Precision Master (Matchering Target EQ & Limiting)",
+      "desc": "Precise spectral matching against calibrated studio targets with analog glue & limiter.",
+      "tag": "-14.0 LUFS"
+    },
+    "full": {
+      "title": "AI Full Chain (Enhance + Master)",
+      "desc": "Complete high-end chain: 48kHz AudioSR upscaling, target curve matching & true-peak limiter.",
+      "tag": "All-in-One GPU"
+    }
   }
 }

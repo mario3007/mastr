@@ -6,6 +6,7 @@ import type { PresetId } from '@mastr/config';
 import { AudioDropzone } from './AudioDropzone';
 import { SilverKnob } from './SilverKnob';
 import { StyleTiles } from './StyleTiles';
+import { AiTiles, AiPresetId } from './AiTiles';
 import { ProSliders, ProSettings } from './ProSliders';
 import { ABWaveformPlayer } from './ABWaveformPlayer';
 import { useAuth } from '@/context/AuthContext';
@@ -13,9 +14,10 @@ import {
   uploadAndProcess,
   processUrl,
   pollJobStatus,
+  processRunPodMastering,
   MasteringOptions,
 } from '@/lib/api/masteringClient';
-import { Sliders, Wand2, Zap, ArrowRight, Sparkles, ArrowLeft, Activity } from 'lucide-react';
+import { Sliders, Wand2, Zap, ArrowRight, Sparkles, ArrowLeft, Activity, Disc, Cpu, Bot } from 'lucide-react';
 
 interface StudioWorkspaceProps {
   onOpenPricingModal: () => void;
@@ -26,10 +28,13 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
   const tPlayer = useTranslations('player');
   const tHero = useTranslations('hero');
   const tCommon = useTranslations('common');
+  const tAi = useTranslations('aiEngine');
   const { creditsRemaining, deductCredit } = useAuth();
 
   // Workflow steps: 'upload' -> 'configure' -> 'playing'
   const [activeStep, setActiveStep] = useState<'upload' | 'playing'>('upload');
+  const [engine, setEngine] = useState<'classic' | 'ai'>('ai');
+  const [selectedAiPreset, setSelectedAiPreset] = useState<AiPresetId>('full');
   const [mode, setMode] = useState<'easy' | 'pro'>('easy');
 
   // Track state
@@ -70,7 +75,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
     };
   }
 
-  const [cachedMasters, setCachedMasters] = useState<Partial<Record<PresetId, CachedMaster>>>({});
+  const [cachedMasters, setCachedMasters] = useState<Partial<Record<string, CachedMaster>>>({});
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [r2FileKey, setR2FileKey] = useState<string | null>(null);
   const [currentSourceUrl, setCurrentSourceUrl] = useState<string | null>(null);
@@ -126,7 +131,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
   };
 
   const processMastering = async (
-    presetToProcess: PresetId,
+    presetToProcess?: PresetId | AiPresetId,
     fileOverride?: File,
     urlOverride?: string
   ) => {
@@ -135,29 +140,53 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
 
     if (!file && !url) return;
 
+    const activePreset = presetToProcess ?? (engine === 'ai' ? selectedAiPreset : selectedPreset);
+
     setIsProcessing(true);
     setProgress(5);
     setCurrentStepKey('analyzing');
     setMasteringError(null);
 
     try {
-      const options = getMasteringOptions(presetToProcess);
+      const options = getMasteringOptions(engine === 'classic' ? (activePreset as PresetId) : undefined);
 
-      let job: { jobId: string };
-      if (file) {
-        job = await uploadAndProcess(file, options);
+      let result;
+      let effectiveJobId = currentJobId;
+
+      if (effectiveJobId && r2FileKey) {
+        // RunPod GPU Serverless Pipeline via Cloudflare R2
+        result = await processRunPodMastering(
+          effectiveJobId,
+          {
+            engine,
+            preset: activePreset,
+            inputKey: r2FileKey,
+            targetLufs: options.targetLufs,
+          },
+          (p, stepKey) => {
+            setProgress(p);
+            setCurrentStepKey(stepKey);
+          }
+        );
+      } else if (file) {
+        const job = await uploadAndProcess(file, options);
+        effectiveJobId = job.jobId;
+        setCurrentJobId(job.jobId);
+        result = await pollJobStatus(job.jobId, (p, stepKey) => {
+          setProgress(p);
+          setCurrentStepKey(stepKey);
+        });
       } else if (url) {
-        job = await processUrl(url, options);
+        const job = await processUrl(url, options);
+        effectiveJobId = job.jobId;
+        setCurrentJobId(job.jobId);
+        result = await pollJobStatus(job.jobId, (p, stepKey) => {
+          setProgress(p);
+          setCurrentStepKey(stepKey);
+        });
       } else {
         return;
       }
-
-      setCurrentJobId(job.jobId);
-
-      const result = await pollJobStatus(job.jobId, (p, stepKey) => {
-        setProgress(p);
-        setCurrentStepKey(stepKey);
-      });
 
       if (result.status === 'completed') {
         const streamUrl = result.previewUrl || result.finalDownloadUrl!;
@@ -171,16 +200,19 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
 
         const metricsToStore = result.metrics || {
           inputLufs: -19.4,
-          outputLufs: options.targetLufs,
+          outputLufs: options.targetLufs ?? -14.0,
           dynamicRange: 8.4,
         };
 
+        const finalJobId = effectiveJobId || 'job';
+        const finalDownloadUrl = result.finalDownloadUrl || streamUrl;
+
         setCachedMasters((prev) => ({
           ...prev,
-          [presetToProcess]: {
-            jobId: job.jobId,
-            wavUrl: `${workerBaseUrl}/api/v1/master/${job.jobId}/download/wav`,
-            mp3Url: `${workerBaseUrl}/api/v1/master/${job.jobId}/download/mp3`,
+          [activePreset]: {
+            jobId: finalJobId,
+            wavUrl: finalDownloadUrl,
+            mp3Url: finalDownloadUrl,
             previewUrl: streamUrl,
             metrics: metricsToStore,
           },
@@ -217,16 +249,36 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
       return;
     }
 
-    // If preset is NOT yet in cachedMasters:
-    // Full user control: NEVER auto-start rendering!
-    // The user selects the preset and explicitly clicks "Mastering starten".
     console.log(`--> PRESET SELECTED (NOT YET RENDERED): ${newPreset}. Ready for manual start.`);
   };
 
-  const handleFileSelect = (file: File, r2Data?: { fileKey: string; uploadUrl?: string }) => {
+  const handleSelectAiPreset = (newPreset: AiPresetId) => {
+    setSelectedAiPreset(newPreset);
+
+    if (activeStep !== 'playing' || isDemo) {
+      return;
+    }
+
+    // Check session cache: Instant switch without new API call or loading time
+    const cached = cachedMasters[newPreset];
+    if (cached) {
+      console.log(`--> SWITCHING AI PRESET to ${newPreset} (CACHED):`, cached.previewUrl);
+      setCurrentJobId(cached.jobId);
+      setMasteredAudioUrl(cached.previewUrl || cached.mp3Url || cached.wavUrl);
+      setMeasuredMetrics(cached.metrics);
+      return;
+    }
+
+    console.log(`--> AI PRESET SELECTED (NOT YET RENDERED): ${newPreset}. Ready for manual start.`);
+  };
+
+  const handleFileSelect = (file: File, r2Data?: { jobId?: string; fileKey: string; uploadUrl?: string }) => {
     // 100% free preview - no credit deduction!
     setIsDemo(false);
     setCurrentFile(file);
+    if (r2Data?.jobId) {
+      setCurrentJobId(r2Data.jobId);
+    }
     setR2FileKey(r2Data?.fileKey || null);
     setCurrentSourceUrl(null);
     setCachedMasters({});
@@ -300,6 +352,9 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
   };
 
   const handleDownloadWav = () => {
+    const cachedUrl = cachedMasters[activePresetKey]?.wavUrl;
+    const downloadTarget = cachedUrl || masteredAudioUrl;
+
     if (isDemo) {
       triggerDirectDownload(masteredAudioUrl, `MASTR_${trackName.replace(/\.[^/.]+$/, '')}_24bit.wav`);
       return;
@@ -307,10 +362,10 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
 
     // Unlocked tracks are permanently free to download
     if (isTrackUnlocked) {
-      if (currentJobId) {
+      if (downloadTarget && downloadTarget.startsWith('http')) {
+        triggerDirectDownload(downloadTarget, `MASTR_${trackName.replace(/\.[^/.]+$/, '')}_24bit.wav`);
+      } else if (currentJobId) {
         triggerDirectDownload(`${workerBaseUrl}/api/v1/master/${currentJobId}/download/wav`);
-      } else {
-        triggerDirectDownload(masteredAudioUrl, `MASTR_${trackName.replace(/\.[^/.]+$/, '')}_24bit.wav`);
       }
       return;
     }
@@ -324,10 +379,10 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
     const success = deductCredit();
     if (success) {
       setIsTrackUnlocked(true);
-      if (currentJobId) {
+      if (downloadTarget && downloadTarget.startsWith('http')) {
+        triggerDirectDownload(downloadTarget, `MASTR_${trackName.replace(/\.[^/.]+$/, '')}_24bit.wav`);
+      } else if (currentJobId) {
         triggerDirectDownload(`${workerBaseUrl}/api/v1/master/${currentJobId}/download/wav`);
-      } else {
-        triggerDirectDownload(masteredAudioUrl, `MASTR_${trackName.replace(/\.[^/.]+$/, '')}_24bit.wav`);
       }
     } else {
       onOpenPricingModal();
@@ -335,17 +390,27 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
   };
 
   const handleDownloadMp3 = () => {
-    if (currentJobId) {
+    const cachedUrl = cachedMasters[activePresetKey]?.mp3Url;
+    const downloadTarget = cachedUrl || masteredAudioUrl;
+
+    if (downloadTarget && downloadTarget.startsWith('http')) {
+      triggerDirectDownload(downloadTarget, `MASTR_${trackName.replace(/\.[^/.]+$/, '')}_320k.mp3`);
+    } else if (currentJobId) {
       triggerDirectDownload(`${workerBaseUrl}/api/v1/master/${currentJobId}/download/mp3`);
-    } else {
-      triggerDirectDownload(masteredAudioUrl, `MASTR_${trackName.replace(/\.[^/.]+$/, '')}_320k.mp3`);
     }
   };
 
-  const availableVersions = (Object.keys(cachedMasters) as PresetId[]).map((presetKey) => {
+  const activePresetKey = engine === 'ai' ? selectedAiPreset : selectedPreset;
+  const isCurrentPresetRendered = Boolean(cachedMasters[activePresetKey]);
+
+  const availableVersions = Object.keys(cachedMasters).map((presetKey) => {
     let label: string = presetKey;
     try {
-      label = tPresets(`${presetKey}.title` as any) || presetKey;
+      if (['audiosr', 'matchering', 'full'].includes(presetKey)) {
+        label = tAi(`${presetKey}.title` as any) || presetKey;
+      } else {
+        label = tPresets(`${presetKey}.title` as any) || presetKey;
+      }
     } catch (_) {}
     return {
       id: presetKey,
@@ -353,8 +418,6 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
       lufs: cachedMasters[presetKey]?.metrics?.outputLufs,
     };
   });
-
-  const isCurrentPresetRendered = Boolean(cachedMasters[selectedPreset]);
 
   return (
     <div className="w-full space-y-10">
@@ -376,58 +439,104 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
         </div>
       )}
 
-      {/* Mode Switcher Bar */}
+      {/* Engine Switcher Bar (Classic vs AI) */}
       <div className="flex items-center justify-center">
         <div className="flex items-center rounded-2xl bg-studio-900 p-1.5 border border-studio-700/80 shadow-2xl">
+          {/* Tab 1: Classic Mastering */}
           <button
             type="button"
-            onClick={() => setMode('easy')}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold transition-all ${
-              mode === 'easy'
+            onClick={() => setEngine('classic')}
+            className={`flex items-center gap-2 rounded-xl px-4 sm:px-6 py-2.5 text-xs sm:text-sm font-bold transition-all ${
+              engine === 'classic'
                 ? 'bg-gradient-to-r from-accent-cyan to-accent-purple text-studio-950 shadow-md shadow-accent-cyan/20'
                 : 'text-studio-400 hover:text-white'
             }`}
           >
-            <Wand2 className="h-4 w-4" />
-            <span>{tPresets('modeEasy')}</span>
+            <Disc className="h-4 w-4" />
+            <span>{tAi('tabClassic')}</span>
           </button>
 
+          {/* Tab 2: AI Enhancer & Mastering (GPU) */}
           <button
             type="button"
-            onClick={() => setMode('pro')}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold transition-all ${
-              mode === 'pro'
-                ? 'bg-gradient-to-r from-accent-cyan to-accent-purple text-studio-950 shadow-md shadow-accent-cyan/20'
+            onClick={() => setEngine('ai')}
+            className={`relative flex items-center gap-2 rounded-xl px-4 sm:px-6 py-2.5 text-xs sm:text-sm font-bold transition-all ${
+              engine === 'ai'
+                ? 'bg-gradient-to-r from-accent-purple via-accent-cyan to-accent-purple text-studio-950 shadow-lg shadow-accent-cyan/30'
                 : 'text-studio-400 hover:text-white'
             }`}
           >
-            <Sliders className="h-4 w-4" />
-            <span>{tPresets('modePro')}</span>
+            <Sparkles className="h-4 w-4 fill-current text-studio-950" />
+            <span>{tAi('tabAi')}</span>
+            <span className="ml-1.5 inline-flex items-center rounded-full bg-accent-cyan/20 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-accent-cyan border border-accent-cyan/50 shadow-[0_0_12px_rgba(0,240,255,0.6)] animate-pulse">
+              {tAi('badgeAiPro')}
+            </span>
           </button>
         </div>
       </div>
 
-      {/* Mode Specific Controls */}
-      {mode === 'easy' ? (
+      {/* Engine Specific Controls */}
+      {engine === 'ai' ? (
+        <AiTiles
+          selectedPreset={selectedAiPreset}
+          onSelectPreset={handleSelectAiPreset}
+        />
+      ) : (
         <div className="space-y-8">
-          {/* Central Silver Dial */}
-          <div className="flex justify-center py-2">
-            <SilverKnob
-              value={intensity}
-              onChange={setIntensity}
-              label={tPresets('intensityLabel')}
-              tooltip={tPresets('intensityTooltip')}
-            />
+          {/* Mode Switcher Bar */}
+          <div className="flex items-center justify-center">
+            <div className="flex items-center rounded-2xl bg-studio-900 p-1.5 border border-studio-700/80 shadow-2xl">
+              <button
+                type="button"
+                onClick={() => setMode('easy')}
+                className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold transition-all ${
+                  mode === 'easy'
+                    ? 'bg-gradient-to-r from-accent-cyan to-accent-purple text-studio-950 shadow-md shadow-accent-cyan/20'
+                    : 'text-studio-400 hover:text-white'
+                }`}
+              >
+                <Wand2 className="h-4 w-4" />
+                <span>{tPresets('modeEasy')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMode('pro')}
+                className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold transition-all ${
+                  mode === 'pro'
+                    ? 'bg-gradient-to-r from-accent-cyan to-accent-purple text-studio-950 shadow-md shadow-accent-cyan/20'
+                    : 'text-studio-400 hover:text-white'
+                }`}
+              >
+                <Sliders className="h-4 w-4" />
+                <span>{tPresets('modePro')}</span>
+              </button>
+            </div>
           </div>
 
-          {/* 4 Style Tiles */}
-          <StyleTiles
-            selectedPreset={selectedPreset}
-            onSelectPreset={handleSelectPreset}
-          />
+          {/* Mode Specific Controls */}
+          {mode === 'easy' ? (
+            <div className="space-y-8">
+              {/* Central Silver Dial */}
+              <div className="flex justify-center py-2">
+                <SilverKnob
+                  value={intensity}
+                  onChange={setIntensity}
+                  label={tPresets('intensityLabel')}
+                  tooltip={tPresets('intensityTooltip')}
+                />
+              </div>
+
+              {/* 4 Style Tiles */}
+              <StyleTiles
+                selectedPreset={selectedPreset}
+                onSelectPreset={handleSelectPreset}
+              />
+            </div>
+          ) : (
+            <ProSliders settings={proSettings} onChange={setProSettings} />
+          )}
         </div>
-      ) : (
-        <ProSliders settings={proSettings} onChange={setProSettings} />
       )}
 
       {/* Upload Dropzone or Synchronous A/B Waveform Player */}
@@ -450,7 +559,9 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
                     {tPlayer('choosePresetPrompt')}
                   </h4>
                   <p className="text-xs text-studio-400">
-                    {mode === 'pro'
+                    {engine === 'ai'
+                      ? `${tAi(`${selectedAiPreset}.title` as any)} • ${tAi(`${selectedAiPreset}.tag` as any)}`
+                      : mode === 'pro'
                       ? tPresets('modePro')
                       : `${tPresets(`${selectedPreset}.title` as any)} • ${tPresets(`${selectedPreset}.tag` as any)}`}
                   </p>
@@ -458,14 +569,17 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
               </div>
               <button
                 type="button"
-                onClick={() => processMastering(selectedPreset)}
+                onClick={() => processMastering(activePresetKey)}
                 className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent-cyan to-accent-purple px-6 py-3 text-xs md:text-sm font-extrabold text-studio-950 shadow-lg shadow-accent-cyan/25 hover:opacity-95 active:scale-95 transition cursor-pointer"
               >
                 <Sparkles className="h-4 w-4 fill-current" />
                 <span>
                   {Object.keys(cachedMasters).length > 0
                     ? tPlayer('masterWithPreset', {
-                        preset: tPresets(`${selectedPreset}.title` as any),
+                        preset:
+                          engine === 'ai'
+                            ? tAi(`${selectedAiPreset}.title` as any)
+                            : tPresets(`${selectedPreset}.title` as any),
                       })
                     : tPlayer('startMastering')}
                 </span>
@@ -480,7 +594,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
               </div>
               <button
                 type="button"
-                onClick={() => currentFile && processMastering(selectedPreset, currentFile)}
+                onClick={() => currentFile && processMastering(activePresetKey, currentFile)}
                 className="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-xs font-semibold transition-all"
               >
                 Erneut versuchen
@@ -492,15 +606,17 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
             isDemoTrack={isDemo}
             jobId={currentJobId}
             originalSrc={originalAudioUrl}
-            masteredSrc={cachedMasters[selectedPreset]?.previewUrl || ''}
+            masteredSrc={cachedMasters[activePresetKey]?.previewUrl || ''}
             isProcessing={isProcessing}
             processingProgress={progress}
             currentStepKey={currentStepKey}
             inputLufs={measuredMetrics?.inputLufs ?? -19.4}
             outputLufs={
-              cachedMasters[selectedPreset]?.metrics?.outputLufs ??
+              cachedMasters[activePresetKey]?.metrics?.outputLufs ??
               measuredMetrics?.outputLufs ??
-              (mode === 'pro'
+              (engine === 'ai'
+                ? -14.0
+                : mode === 'pro'
                 ? proSettings.lufsTarget
                 : selectedPreset === 'club_punch' || selectedPreset === 'club_edm'
                 ? -8.5
@@ -515,17 +631,25 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
                 : -14.0)
             }
             dynamicRange={
-              cachedMasters[selectedPreset]?.metrics?.dynamicRange ??
+              cachedMasters[activePresetKey]?.metrics?.dynamicRange ??
               measuredMetrics?.dynamicRange ??
               8.4
             }
-            onReMaster={() => processMastering(selectedPreset)}
+            onReMaster={() => processMastering(activePresetKey)}
             onDownloadWav={handleDownloadWav}
             onDownloadMp3={handleDownloadMp3}
             onBack={() => setActiveStep('upload')}
             availableVersions={availableVersions}
-            activeVersionId={selectedPreset}
-            onSelectVersion={(versionId) => handleSelectPreset(versionId as PresetId)}
+            activeVersionId={activePresetKey}
+            onSelectVersion={(versionId) => {
+              if (['audiosr', 'matchering', 'full'].includes(versionId)) {
+                setEngine('ai');
+                handleSelectAiPreset(versionId as AiPresetId);
+              } else {
+                setEngine('classic');
+                handleSelectPreset(versionId as PresetId);
+              }
+            }}
           />
 
           <div className="flex justify-center">

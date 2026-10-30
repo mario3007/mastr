@@ -1,6 +1,7 @@
 import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { r2Client, R2_BUCKET_NAME } from './r2';
+import { getEnv } from '@/lib/config/env';
 
 /**
  * Generates a presigned PUT URL for client/worker direct upload
@@ -32,4 +33,50 @@ export async function generateDownloadUrl(
   });
 
   return getSignedUrl(r2Client, command, { expiresIn });
+}
+
+/**
+ * a) Presigned PUT URL für den Client-Upload des Roh-Audios (Key: uploads/{jobId}/input.wav)
+ */
+export async function generateClientUploadUrl(
+  jobId: string,
+  filename = 'input.wav',
+  contentType = 'audio/wav',
+  expiresIn = 3600
+): Promise<{ uploadUrl: string; key: string }> {
+  const ext = filename.split('.').pop()?.toLowerCase() || 'wav';
+  const validExt = ['wav', 'mp3', 'flac', 'aiff', 'm4a', 'aac'].includes(ext) ? ext : 'wav';
+  const key = `uploads/${jobId}/input.${validExt}`;
+  const uploadUrl = await generateUploadUrl(key, contentType, expiresIn);
+  return { uploadUrl, key };
+}
+
+/**
+ * b) Presigned PUT URL für den RunPod-Worker (Key: masters/{jobId}/master.wav)
+ */
+export async function generateWorkerUploadUrl(
+  jobId: string,
+  contentType = 'audio/wav',
+  expiresIn = 3600
+): Promise<{ uploadUrl: string; key: string }> {
+  const key = `masters/${jobId}/master.wav`;
+  const uploadUrl = await generateUploadUrl(key, contentType, expiresIn);
+  return { uploadUrl, key };
+}
+
+/**
+ * c) Öffentliche oder Presigned GET URL für den Download des fertigen Masters
+ */
+export async function getMasterDownloadUrl(
+  key: string,
+  expiresIn = 3600
+): Promise<string> {
+  const env = getEnv();
+  const publicUrl = process.env.R2_PUBLIC_URL || env.R2_PUBLIC_URL;
+  if (publicUrl && publicUrl.trim().length > 0) {
+    const cleanPublicBase = publicUrl.replace(/\/+$/, '');
+    const cleanKey = key.replace(/^\/+/, '');
+    return `${cleanPublicBase}/${cleanKey}`;
+  }
+  return generateDownloadUrl(key, expiresIn);
 }

@@ -552,9 +552,9 @@ export const ABWaveformPlayer: React.FC<ABWaveformPlayerProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-accent-amber/30 bg-accent-amber/10 px-3.5 py-1.5 text-xs font-mono text-accent-amber">
             <div className="flex items-center gap-2">
               <RotateCw className="h-4 w-4 animate-spin shrink-0" />
-              <span>{tPlayer('processing', { progress: processingProgress })}</span>
+              <span>{tPlayer('phaseMastering')} ({processingProgress}%)</span>
             </div>
-            {currentStepKey && (
+            {currentStepKey && currentStepKey !== 'phaseMastering' && (
               <span className="text-[11px] text-accent-amber/80 font-sans border-t sm:border-t-0 sm:border-l border-accent-amber/30 pt-1 sm:pt-0 sm:pl-2">
                 {tPlayer(currentStepKey as any)}
               </span>
@@ -563,7 +563,7 @@ export const ABWaveformPlayer: React.FC<ABWaveformPlayerProps> = ({
         ) : hasMasteredAudio ? (
           <div className="flex items-center gap-2 rounded-xl border border-accent-emerald/30 bg-accent-emerald/10 px-3.5 py-1.5 text-xs font-mono text-accent-emerald">
             <CheckCircle2 className="h-4 w-4" />
-            <span>{tPlayer('ready')}</span>
+            <span>{tPlayer('phaseReady')}</span>
           </div>
         ) : (
           <button

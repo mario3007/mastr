@@ -8,6 +8,7 @@ export interface EnvConfig {
   R2_SECRET_ACCESS_KEY: string;
   R2_BUCKET_NAME: string;
   R2_ENDPOINT: string;
+  R2_PUBLIC_URL: string;
   RUNPOD_API_KEY: string;
   RUNPOD_ENDPOINT_ID: string;
 }
@@ -24,8 +25,9 @@ export function getEnv(): EnvConfig {
     R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY || '',
     R2_BUCKET_NAME: process.env.R2_BUCKET_NAME || 'mastr-audio-storage',
     R2_ENDPOINT: endpoint,
+    R2_PUBLIC_URL: process.env.R2_PUBLIC_URL || '',
     RUNPOD_API_KEY: process.env.RUNPOD_API_KEY || '',
-    RUNPOD_ENDPOINT_ID: process.env.RUNPOD_ENDPOINT_ID || '',
+    RUNPOD_ENDPOINT_ID: process.env.RUNPOD_ENDPOINT_ID || 'j5xlp990dz5bwy',
   };
 }
 
