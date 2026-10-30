@@ -1,0 +1,287 @@
+{
+  "common": {
+    "brand": "MASTR",
+    "tagline": "Estudio de Masterización de Audio con IA",
+    "navHome": "Estudio",
+    "navPricing": "Precios",
+    "navUseCases": "Casos de Uso",
+    "navApi": "API",
+    "creditsLeft": "{count} Créditos restantes",
+    "freeCreditsBadge": "Gratis",
+    "getMoreCredits": "Recargar créditos",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "close": "Cerrar",
+    "loading": "Cargando...",
+    "errorGeneric": "Ha ocurrido un error inesperado.",
+    "footerRights": "Todos los derechos reservados.",
+    "footerLegal": "Privacidad y Aviso Legal",
+    "language": "Idioma"
+  },
+  "hero": {
+    "badge": "Masterización de Audio de Próxima Generación v2.0",
+    "title": "Masterización de audio profesional en segundos",
+    "subtitle": "Masterización precisa con IA para productores, beatmakers y creadores de Suno AI. Calidez analógica, compensación de ganancia automática y rango dinámico impecable.",
+    "ctaUpload": "Masterizar pista ahora",
+    "ctaDemo": "Escuchar comparaciones A/B",
+    "load_demo": "Cargar pista de demostración (Tech House Preview)",
+    "pillWav": "WAV sin pérdida de 24 bits",
+    "pillSpeed": "Listo en menos de 30s",
+    "pillGain": "Auténtica compensación A/B"
+  },
+  "auth": {
+    "modalTitle": "Iniciar sesión en MASTR Studio",
+    "modalSubtitle": "Guarda tus masters y desbloquea 2 créditos gratuitos en alta resolución.",
+    "googleButton": "Continuar con Google",
+    "appleButton": "Continuar con Apple",
+    "orEmail": "O accede mediante enlace mágico seguro",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu.nombre@estudio.com",
+    "sendMagicLink": "Enviar enlace mágico",
+    "linkSentSuccess": "¡Te hemos enviado un enlace de acceso! Revisa tu bandeja de entrada.",
+    "userProfile": "Mi Cuenta"
+  },
+  "player": {
+    "dropzoneTitle": "Arrastra tu archivo de audio aquí o búscalo",
+    "dropzoneSubtitle": "Compatible con WAV, MP3, FLAC y AIFF (hasta 250 MB)",
+    "uploadingToStorage": "Subiendo al almacenamiento Cloudflare R2...",
+    "uploadProgress": "Subida a la nube ({progress}%)...",
+    "uploadError": "Error al subir a Cloudflare R2. Inténtalo de nuevo.",
+    "retryUpload": "Reintentar subida",
+    "orText": "O",
+    "sunoUrlLabel": "Pegar enlace de pista de Suno",
+    "sunoUrlPlaceholder": "https://suno.com/song/...",
+    "sunoImportButton": "Importar pista",
+    "sunoDetectedBadge": "Pista Suno detectada • Restauración por IA y De-Harshing activados",
+    "stepHighpass": "Filtrando paso alto y sub-retumbo...",
+    "stepBassMono": "Matriz inteligente bajo-mono...",
+    "stepDynamicEq": "EQ dinámico y balance espectral...",
+    "stepSaturation": "Saturación analógica y armónicos...",
+    "stepLimiter": "Limitador True-Peak Brickwall (-0.5 dBTP)...",
+    "stepExporting": "Renderizando WAV de 24 bits y previa de 320k...",
+    "trackLoaded": "Pista cargada: {name}",
+    "backToUpload": "Elegir otra pista",
+    "versionsLabel": "Versiones masterizadas",
+    "masterTab": "{name}",
+    "originalBadge": "Original (A)",
+    "masteredBadge": "PulseMaster (B)",
+    "switchLabel": "Comparación A/B",
+    "gainMatchToggle": "Gain Match (Compensación de volumen)",
+    "gainMatchTooltip": "Ajusta automáticamente el volumen original para igualarlo al master (-{db} dB) y juzgar el sonido sin sesgos psicoacústicos.",
+    "play": "Reproducir",
+    "pause": "Pausa",
+    "analyzing": "Analizando señal de audio...",
+    "processing": "Procesando algoritmo de masterización ({progress}%)...",
+    "ready": "Masterización completada",
+    "startMastering": "Iniciar masterización",
+    "notMasteredYet": "Listo para masterizar",
+    "choosePresetPrompt": "Elige preset y ajustes de sonido, luego inicia la masterización",
+    "masterWithPreset": "Masterizar ahora con {preset}",
+    "downloadButton": "Descargar pista masterizada",
+    "reMasterButton": "Recalcular",
+    "lufsIn": "LUFS de Entrada: {value}",
+    "lufsOut": "LUFS de Salida: {value}",
+    "dynamicRange": "Rango Dinámico: {value} LU",
+    "meterInput": "Entrada",
+    "meterOutput": "Salida",
+    "meterDynamics": "Dinámica"
+  },
+  "presets": {
+    "modeEasy": "Modo Fácil",
+    "modePro": "Modo Estudio Pro",
+    "intensityLabel": "Intensidad de Masterización",
+    "intensityTooltip": "Controla el balance de compresión, saturación y limitación (0-100%).",
+    "activeBadge": "Activo",
+    "selectBadge": "Seleccionar",
+    "groove_soul": {
+      "title": "Groove & Soul",
+      "desc": "Deep House, UK Garage y Nu-Disco. Rebote elástico en graves, calidez de cinta analógica y agudos sedosos.",
+      "tag": "-11.0 LUFS"
+    },
+    "club_punch": {
+      "title": "Club Punch",
+      "desc": "Heavy Club, Tech House, EDM y Festivales. Máxima pegada, subgraves mono sólidos y limitador intransigente.",
+      "tag": "-8.5 LUFS"
+    },
+    "warm_tape": {
+      "title": "Warm Tape",
+      "desc": "Lo-Fi, R&B, Indie y Vintage. Rica saturación armónica tanh con caída suave y orgánica en frecuencias altas.",
+      "tag": "-13.0 LUFS"
+    },
+    "vocal_pop": {
+      "title": "Vocal Pop",
+      "desc": "Pop Moderno, Radio y Trap. Corte quirúrgico antiresonancias, presencia vocal brillante a 3.2 kHz y aire cristalino.",
+      "tag": "-10.5 LUFS"
+    },
+    "suno_enhancer": {
+      "title": "Suno / AI Enhancer",
+      "desc": "Restauración para pistas de Suno/Udio. Reconstrucción de subgraves, filtro anti-aspereza en 4.1 kHz y amplitud estéreo.",
+      "tag": "-9.5 LUFS"
+    },
+    "auto_ai": {
+      "title": "Auto AI Match",
+      "desc": "Balance de frecuencias y modelado dinámico adaptado a plataformas de streaming modernas.",
+      "tag": "Versátil"
+    },
+    "suno_enhancer": {
+      "title": "Suno / AI Enhancer",
+      "desc": "Restaura pérdidas en subgraves, suaviza agudos metálicos estridentes y amplía la imagen estéreo de audio IA.",
+      "tag": "Especialista IA"
+    },
+    "club_edm": {
+      "title": "Club & EDM (-8.5 LUFS)",
+      "desc": "Pegada contundente en graves, limitador transparente y presencia espacial para sistemas de discoteca.",
+      "tag": "Máximo Volumen"
+    },
+    "streaming_balanced": {
+      "title": "Streaming Equilibrado (-14 LUFS)",
+      "desc": "Calibración exacta para Spotify, Apple Music y YouTube sin compresión secundaria destructiva.",
+      "tag": "Listo para Streaming"
+    }
+  },
+  "pro_controls": {
+    "headline": "Parámetros de Precisión",
+    "low_end_punch": {
+      "title": "Low-End Punch",
+      "desc": "Definición y pegada de subgraves entre 45 Hz y 90 Hz."
+    },
+    "stereo_width": {
+      "title": "Stereo Width",
+      "desc": "Expansión matricial M/S para mayor espacialidad sin cancelaciones de fase."
+    },
+    "vocal_clarity": {
+      "title": "Vocal Clarity",
+      "desc": "Realce armónico en frecuencias medias para voces e instrumentos solistas."
+    },
+    "tape_drive": {
+      "title": "Tape Drive",
+      "desc": "Saturación cálida de cinta analógica vintage y armónicos musicales."
+    },
+    "lufs_target": {
+      "label": "Sonoridad Objetivo (LUFS)",
+      "desc": "Selecciona el nivel integrado objetivo para tu canal de distribución."
+    },
+    "reference_track": {
+      "label": "Pista de Referencia (Opcional)",
+      "placeholder": "Arrastra una pista de referencia (.wav / .mp3) para igualación espectral",
+      "remove": "Quitar"
+    },
+    "resetDefaults": "Restablecer parámetros"
+  },
+  "pricing": {
+    "modalTitle": "Elige tu plan de masterización",
+    "modalSubtitle": "Sin costes ocultos. Propiedad comercial total de tus archivos finales.",
+    "payAsYouGo": "Pago por uso",
+    "subscription": "Suscripción Creador",
+    "single": {
+      "title": "1 Crédito de Master",
+      "price": "3,99 €",
+      "desc": "Ideal para lanzamientos individuales o pruebas rápidas",
+      "features": [
+        "1 Master completo en WAV de 24 bits",
+        "Todos los presets de IA y Modo Pro incluidos",
+        "Comparación A/B síncrona en el reproductor",
+        "Sin suscripción, los créditos nunca caducan"
+      ],
+      "cta": "Comprar 1 Crédito"
+    },
+    "bundle": {
+      "badge": "Más Popular",
+      "title": "Pack de 5 Créditos",
+      "price": "12,99 €",
+      "desc": "Ahorra más del 35% respecto a créditos sueltos (2,60 € por master)",
+      "features": [
+        "5 Masters completos en WAV de 24 bits",
+        "Cola prioritaria de procesamiento en la nube",
+        "Coincidencia espectral con pista de referencia",
+        "Licencia comercial para streaming y clubes"
+      ],
+      "cta": "Obtener Pack de 5"
+    },
+    "creator": {
+      "badge": "Mejor Valor",
+      "title": "Creator Pro",
+      "price": "9,99 €",
+      "interval": "al mes",
+      "desc": "Para productores de música, beatmakers y creadores de contenido",
+      "features": [
+        "15 Masters incluidos cada mes",
+        "Los créditos no utilizados se acumulan",
+        "Acceso directo a la API y procesamiento por lotes",
+        "Soporte VIP y acceso anticipado a nuevos modelos"
+      ],
+      "cta": "Iniciar suscripción"
+    },
+    "securityNote": "Pagos seguros con cifrado SSL de 256 bits. Cancela cuando quieras con 1 clic."
+  },
+  "seo": {
+    "defaultTitle": "MASTR - Estudio Online de Masterización de Audio con IA",
+    "defaultDescription": "Masteriza tu música con calidad de estudio usando inteligencia artificial. Optimizado para Suno AI, EDM, Hip-Hop y streaming con reproductor comparador A/B.",
+    "keywords": "masterizacion audio online, masterizar con ia, suno ai mastering, masterizar musica online, normalizador lufs",
+    "usecases": {
+      "suno-ai": {
+        "title": "Masterización para Suno AI: Sonido Profesional de Estudio | MASTR",
+        "description": "Elimina la estridencia digital, reconstruye subgraves potentes y lleva tu música de Suno AI al nivel de radio y streaming.",
+        "h1": "Masterizar y mejorar música de Suno AI",
+        "intro": "Suno genera pistas asombrosas pero a menudo carece de pegada en subgraves y presenta agudos metálicos. Nuestro algoritmo con IA elimina artefactos y aporta calidez analógica.",
+        "problemTitle": "El desafío del audio generado por IA",
+        "problemDesc": "Los generadores de IA producen archivos con agudos ásperos y frecuencias medias embarradas que suenan débiles en monitores y clubes.",
+        "solutionTitle": "La solución MASTR Suno-Enhancer",
+        "solutionDesc": "Con eliminación de asperezas (de-harshing), síntesis de subgraves armónicos y limitación multibanda, tus pistas de Suno adquieren calidad comercial.",
+        "faq1Q": "¿Puedo importar canciones directamente con la URL de Suno?",
+        "faq1A": "¡Sí! Pega el enlace de la canción de Suno.com en el reproductor y MASTR descargará automáticamente el archivo con la máxima calidad.",
+        "faq2Q": "¿El resultado es apto para Spotify y Apple Music?",
+        "faq2A": "Sí, recibes archivos WAV de 24 bits a -14 LUFS o -8.5 LUFS que cumplen con los requisitos de todas las plataformas."
+      },
+      "house-music": {
+        "title": "Masterización de House y EDM Online: Máxima Potencia para Clubes | MASTR",
+        "description": "Masterización transparente y con volumen para clubes. Alcanza -8.5 LUFS sin distorsión y con perfecta separación de bombo y bajo.",
+        "h1": "Masterización de House y Música Electrónica",
+        "intro": "Desde Deep House hasta Techno: dale a tus drops la pegada de graves y la amplitud estéreo necesarias para destacar en cualquier sistema de sonido.",
+        "problemTitle": "La complejidad de masterizar electrónica",
+        "problemDesc": "Las frecuencias subsónicas consumen margen dinámico rápidamente. Una compresión errónea arruina la dinámica del track.",
+        "solutionTitle": "Limitación precisa y pulido estéreo",
+        "solutionDesc": "Nuestro preset Club & EDM centra los subgraves en mono y expande el estéreo sin problemas de cancelación de fase.",
+        "faq1Q": "¿Los graves son compatibles con mono?",
+        "faq1A": "Sí, las frecuencias por debajo de 100 Hz se convierten automáticamente a mono para garantizar consistencia en clubes.",
+        "faq2Q": "¿A qué volumen se masteriza?",
+        "faq2A": "El modo Club apunta a entre -8.5 y -7.5 LUFS con True-Peak a -0.3 dBFS."
+      },
+      "hip-hop-beats": {
+        "title": "Masterización de Beats de Hip-Hop y Trap Online | MASTR",
+        "description": "Bajos 808 profundos, cajas afiladas y espacio para la voz. La herramienta de masterización para productores de ritmos.",
+        "h1": "Masterización de Beats de Hip-Hop y Trap",
+        "intro": "Consigue que tus 808 impacten en altavoces de móvil y sistemas de coche sin tapar las voces ni la caja.",
+        "problemTitle": "El dilema de los 808 y el margen dinámico",
+        "problemDesc": "Un exceso de frecuencias graves satura el limitador y genera mezclas planas y sin definición.",
+        "solutionTitle": "Saturación armónica y protección de transitorios",
+        "solutionDesc": "MASTR genera armónicos sutiles para que el subgrave sea audible en cualquier dispositivo mientras la pegada se mantiene nítida.",
+        "faq1Q": "¿Sirve para canciones completas con voces?",
+        "faq1A": "Por supuesto. Usa el control Vocal Clarity en el Modo Pro para destacar las voces en la mezcla.",
+        "faq2Q": "¿Puedo exportar para BeatStars?",
+        "faq2A": "Sí, obtendrás archivos WAV listos para arrendamiento y venta con estándares de la industria."
+      },
+      "podcasts": {
+        "title": "Masterización de Podcasts y Locución Online | MASTR",
+        "description": "Volumen de voz constante, reducción de ruidos y claridad vocal profesional para podcasts y audiolibros.",
+        "h1": "Masterización de Podcasts y Voz Hablada",
+        "intro": "Niveles uniformes entre interlocutores, calidez de proximidad y cumplimiento de la norma internacional EBU R128 (-16 LUFS estéreo).",
+        "problemTitle": "Niveles desiguales y ruidos de sala",
+        "problemDesc": "Diferentes micrófonos o entornos de grabación provocan fatiga auditiva durante escuchas prolongadas.",
+        "solutionTitle": "Nivelación optimizada para diálogo y De-Essing",
+        "solutionDesc": "Nivelación inteligente multibanda que balancea las dinámicas de la conversación y suaviza los siseos agudos.",
+        "faq1Q": "¿Qué estándar de sonoridad se aplica?",
+        "faq1A": "Se procesa conforme al estándar internacional de podcasts: -16 LUFS para estéreo y -19 LUFS para mono.",
+        "faq2Q": "¿Reduce los ruidos de fondo?",
+        "faq2A": "Una atenuación espectral suave reduce la reverberación y el zumbido ambiente continuo."
+      }
+    }
+  },
+  "download": {
+    "wav_button": "Descargar Master (WAV 24-Bit)",
+    "mp3_button": "Vista previa MP3 (320 kbps)",
+    "badge_quality": "24-Bit / 44.1 kHz HD PCM",
+    "badge_broadcast": "Listo para streaming y radio",
+    "downloading": "Iniciando descarga..."
+  }
+}

@@ -1,0 +1,11 @@
+runpod>=1.7.0
+matchering>=2.0.6
+pedalboard>=0.9.15
+pyloudnorm>=0.1.1
+soundfile>=0.12.1
+scipy>=1.12.0
+numpy>=1.26.0
+requests>=2.31.0
+torch
+torchaudio
+git+https://github.com/haoheliu/AudioSR.git

@@ -1,0 +1,287 @@
+{
+  "common": {
+    "brand": "MASTR",
+    "tagline": "KI Audio Mastering Studio",
+    "navHome": "Studio",
+    "navPricing": "Preise",
+    "navUseCases": "Anwendungsbereiche",
+    "navApi": "API",
+    "creditsLeft": "{count} Credits übrig",
+    "freeCreditsBadge": "Kostenlos",
+    "getMoreCredits": "Credits aufladen",
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "close": "Schließen",
+    "loading": "Wird geladen...",
+    "errorGeneric": "Ein unerwarteter Fehler ist aufgetreten.",
+    "footerRights": "Alle Rechte vorbehalten.",
+    "footerLegal": "Datenschutz & Impressum",
+    "language": "Sprache"
+  },
+  "hero": {
+    "badge": "Next-Gen Audio Mastering v2.0",
+    "title": "Studiotaugliches Audio-Mastering in Sekunden",
+    "subtitle": "Präzises KI-Mastering für Produzenten, Beatmaker und Suno AI Artists. Authentischer analoger Sound, automatisches Gain-Matching und kristallklare Dynamik.",
+    "ctaUpload": "Track jetzt mastern",
+    "ctaDemo": "Hörbeispiele vergleichen",
+    "load_demo": "Demo-Track laden (Tech House Preview)",
+    "pillWav": "Verlustfreie 24-Bit WAV",
+    "pillSpeed": "Fertig in unter 30 Sekunden",
+    "pillGain": "Echtes A/B Gain-Matching"
+  },
+  "auth": {
+    "modalTitle": "Im MASTR Studio anmelden",
+    "modalSubtitle": "Speichere deine Masters dauerhaft und erhalte 2 kostenlose High-Res Credits.",
+    "googleButton": "Weiter mit Google",
+    "appleButton": "Weiter mit Apple",
+    "orEmail": "Oder per sicherem Magic Link",
+    "emailLabel": "E-Mail-Adresse",
+    "emailPlaceholder": "dein.name@studio.com",
+    "sendMagicLink": "Magic Link anfordern",
+    "linkSentSuccess": "Wir haben dir einen Anmeldelink gesendet! Bitte prüfe dein Postfach.",
+    "userProfile": "Mein Account"
+  },
+  "player": {
+    "dropzoneTitle": "Audiodatei hier ablegen oder durchsuchen",
+    "dropzoneSubtitle": "Unterstützt WAV, MP3, FLAC & AIFF (bis zu 250 MB)",
+    "uploadingToStorage": "Wird zu Cloudflare R2 hochgeladen...",
+    "uploadProgress": "Cloud-Upload ({progress}%)...",
+    "uploadError": "Upload zu Cloudflare R2 fehlgeschlagen. Bitte erneut versuchen.",
+    "retryUpload": "Upload wiederholen",
+    "orText": "ODER",
+    "sunoUrlLabel": "Suno Track URL einfügen",
+    "sunoUrlPlaceholder": "https://suno.com/song/...",
+    "sunoImportButton": "Track importieren",
+    "sunoDetectedBadge": "Suno Track erkannt • KI-Restaurierung & De-Harshing aktiviert",
+    "stepHighpass": "Highpass & Sub-Rumpeln filtern...",
+    "stepBassMono": "Intelligente Bass-Mono Matrix...",
+    "stepDynamicEq": "Dynamic EQ & Spectral Balancing...",
+    "stepSaturation": "Analoge Bandsättigung & Obertöne...",
+    "stepLimiter": "True-Peak Brickwall Limiter (-0.5 dBTP)...",
+    "stepExporting": "24-Bit WAV & 320k Preview rendern...",
+    "trackLoaded": "Geladener Track: {name}",
+    "backToUpload": "Anderen Track wählen",
+    "versionsLabel": "Gemasterte Versionen",
+    "masterTab": "{name}",
+    "originalBadge": "Original (A)",
+    "masteredBadge": "PulseMaster (B)",
+    "switchLabel": "A/B Vergleich",
+    "gainMatchToggle": "Gain Match (Lautheitskompensation)",
+    "gainMatchTooltip": "Passt die Lautstärke des Originals automatisch an das Master an (-{db} dB), um psychoakustische Verzerrungen beim Vergleich auszuschließen.",
+    "play": "Wiedergabe",
+    "pause": "Pause",
+    "analyzing": "Audio-Signal wird analysiert...",
+    "processing": "Mastering-DSP Pipeline aktiv ({progress}%)...",
+    "ready": "Mastering abgeschlossen",
+    "startMastering": "Mastering starten",
+    "notMasteredYet": "Bereit zum Mastern",
+    "choosePresetPrompt": "Preset wählen & Mastering starten",
+    "masterWithPreset": "Jetzt mit {preset} mastern",
+    "downloadButton": "Gemasterten Track herunterladen",
+    "reMasterButton": "Neu berechnen",
+    "lufsIn": "Input LUFS: {value}",
+    "lufsOut": "Output LUFS: {value}",
+    "dynamicRange": "Dynamik: {value} LU",
+    "meterInput": "Eingang",
+    "meterOutput": "Ausgang",
+    "meterDynamics": "Dynamik"
+  },
+  "presets": {
+    "modeEasy": "Easy Mode",
+    "modePro": "Pro Studio Mode",
+    "intensityLabel": "Mastering-Intensität",
+    "intensityTooltip": "Steuert den Gesamtanteil von Kompression, Saturation und Limiting (0-100%).",
+    "activeBadge": "Aktiv",
+    "selectBadge": "Auswählen",
+    "groove_soul": {
+      "title": "Groove & Soul",
+      "desc": "Deep House, UK Garage & Nu-Disco. Federnder Low-End-Bounce, analoge Tape-Wärme und seidige Höhen.",
+      "tag": "-11.0 LUFS"
+    },
+    "club_punch": {
+      "title": "Club Punch",
+      "desc": "Heavy Club, Tech House, EDM & Festival. Maximaler Punch, straffer Mono-Subbass und kompromissloser Limiter.",
+      "tag": "-8.5 LUFS"
+    },
+    "warm_tape": {
+      "title": "Warm Tape",
+      "desc": "Lo-Fi, R&B, Indie & Vintage. Reiche harmonische Tanh-Sättigung mit organischem, sanftem Höhen-Roll-off.",
+      "tag": "-13.0 LUFS"
+    },
+    "vocal_pop": {
+      "title": "Vocal Pop",
+      "desc": "Modern Pop, Radio & Trap. Präziser De-Boxiness-Cut, strahlende Vocal-Präsenz bei 3.2 kHz und seidiger Air-Glanz.",
+      "tag": "-10.5 LUFS"
+    },
+    "suno_enhancer": {
+      "title": "Suno / AI Enhancer",
+      "desc": "KI-Restaurierung für Suno/Udio-Tracks. Subbass-Rekonstruktion, Anti-Harshness-Notch bei 4.1 kHz und Stereo-Breite.",
+      "tag": "-9.5 LUFS"
+    },
+    "auto_ai": {
+      "title": "Auto AI Match",
+      "desc": "Intelligente Frequenzbalance und dynamische Anpassung an moderne Streaming-Standards.",
+      "tag": "Allrounder"
+    },
+    "suno_enhancer": {
+      "title": "Suno / AI Enhancer",
+      "desc": "Spezielle Wiederherstellung von Subbässen, Entschärfung metallischer Höhen (De-Harsh) und Stereo-Tiefe für KI-Audio.",
+      "tag": "KI-Spezialist"
+    },
+    "club_edm": {
+      "title": "Club & EDM (-8.5 LUFS)",
+      "desc": "Aggressiver Low-End Punch, lauter transparenter Limiter und breites Stereobild für Club-Systeme.",
+      "tag": "Maximum Loudness"
+    },
+    "streaming_balanced": {
+      "title": "Streaming Balanced (-14 LUFS)",
+      "desc": "Perfekt kalibriert für Spotify, Apple Music & YouTube Music ohne nachträgliche Normalisierungs-Kompression.",
+      "tag": "Streaming-Ready"
+    }
+  },
+  "pro_controls": {
+    "headline": "Präzisions-Parameter",
+    "low_end_punch": {
+      "title": "Low-End Punch",
+      "desc": "Subbass-Definition und Punch bei 45 Hz - 90 Hz."
+    },
+    "stereo_width": {
+      "title": "Stereo Width",
+      "desc": "M/S-Matrix Erweiterung für ein breiteres Raumgefühl ohne Phasenauslöschungen."
+    },
+    "vocal_clarity": {
+      "title": "Vocal Clarity",
+      "desc": "Präsenz-Boost in den Mitten für kristallklare Stimmen und Leads."
+    },
+    "tape_drive": {
+      "title": "Tape Drive",
+      "desc": "Warme analoge Bandsättigung und harmonische Obertöne."
+    },
+    "lufs_target": {
+      "label": "Ziel-Lautheit (LUFS)",
+      "desc": "Wähle das Ziel-Lautheitslevel für deinen Veröffentlichungskanal."
+    },
+    "reference_track": {
+      "label": "Referenz-Track (Optional)",
+      "placeholder": "Zieh einen Referenz-Track (.wav / .mp3) hierhin für spektrales Matching",
+      "remove": "Entfernen"
+    },
+    "resetDefaults": "Parameter zurücksetzen"
+  },
+  "pricing": {
+    "modalTitle": "Wähle dein Mastering-Paket",
+    "modalSubtitle": "Keine versteckten Gebühren. Volle kommerzielle Verwertungsrechte.",
+    "payAsYouGo": "Pay As You Go",
+    "subscription": "Creator Abo",
+    "single": {
+      "title": "1 Master Credit",
+      "price": "3,99 €",
+      "desc": "Ideal für einzelne Releases und Tests",
+      "features": [
+        "1 Vollwertiger 24-Bit WAV Master",
+        "Alle KI- & Pro-Presets inklusive",
+        "A/B Hörvergleich im Studio Player",
+        "Kein Abonnement, Guthaben verfällt nie"
+      ],
+      "cta": "1 Credit kaufen"
+    },
+    "bundle": {
+      "badge": "Beliebteste Wahl",
+      "title": "5er-Pack Credits",
+      "price": "12,99 €",
+      "desc": "Spare über 35% gegenüber Einzelkauf (2,60 € pro Track)",
+      "features": [
+        "5 Vollwertige 24-Bit WAV Masters",
+        "Prioritäre Cloud-Rendering-Queue",
+        "Referenz-Track Spektral-Matching",
+        "Volle kommerzielle Lizenz für Streaming & Clubs"
+      ],
+      "cta": "5er-Pack sichern"
+    },
+    "creator": {
+      "badge": "Bester Wert",
+      "title": "Creator Pro",
+      "price": "9,99 €",
+      "interval": "pro Monat",
+      "desc": "Für aktive Musikschaffende und Podcaster",
+      "features": [
+        "15 Masters jeden Monat inklusive",
+        "Ungenutzte Credits rollen in den Folgemonat",
+        "API-Zugang & Stapelverarbeitung",
+        "VIP Support & Vorab-Zugang zu neuen Algorithmen"
+      ],
+      "cta": "Abo starten"
+    },
+    "securityNote": "Sichere 256-Bit SSL-Verschlüsselung. Jederzeit mit 1 Klick kündbar."
+  },
+  "seo": {
+    "defaultTitle": "MASTR - Professionelles KI Audio Mastering Studio Online",
+    "defaultDescription": "Mastere deine Musik in Studioqualität mit KI. Optimiert für Suno AI, EDM, Hip-Hop und Streaming-Plattformen. Kostenlos testen mit synchronem A/B Waveform-Player.",
+    "keywords": "audio mastering online, ki mastering, suno ai mastering, music mastering online, wav mastering, lufs normalizer",
+    "usecases": {
+      "suno-ai": {
+        "title": "Suno AI Mastering: KI-Tracks professionell veredeln | MASTR",
+        "description": "Entferne künstliche Härte, stelle drückende Subbässe wieder her und bringe deine Suno AI Musik auf Radio- und Spotify-Lautstärke.",
+        "h1": "KI-Musik von Suno mastern & veredeln",
+        "intro": "Suno generiert spektakuläre Songs, leidet aber oft unter verwaschenen Tiefbässen und metallischen Zischlauten. Unser speziell trainierter KI-Algorithmus repariert Artefakte und liefert transparenten analogen Druck.",
+        "problemTitle": "Das Problem mit rohen Suno Audio-Dateien",
+        "problemDesc": "KI-Modelle rendern im MP3-Bereich mit Kompressionsartefakten im Hochtonbereich und unkontrollierten Tiefmitten. Im Club oder auf Studiomonitoren klingen sie oft dünn.",
+        "solutionTitle": "Die MASTR Suno-Enhancer Lösung",
+        "solutionDesc": "Mit De-Harshing, künstlicher Sub-Harmonic-Synthese und dynamischem Multiband-Limiting klingen deine Suno Tracks wie aus den Abbey Road Studios.",
+        "faq1Q": "Kann ich Songs direkt über die Suno URL importieren?",
+        "faq1A": "Ja! Kopiere einfach den Song-Link von Suno.com in unser Eingabefeld, und MASTR lädt den Track automatisch in höchster verfügbarer Qualität herunter.",
+        "faq2Q": "Ist das Ergebnis für Spotify und Apple Music freigegeben?",
+        "faq2A": "Ja, du erhältst unkomprimierte 24-Bit WAV-Dateien mit perfekt kalibrierten -14 LUFS oder Club -8.5 LUFS, die alle Richtlinien der Streaming-Dienste erfüllen."
+      },
+      "house-music": {
+        "title": "House & EDM Mastering Online: Maximaler Club-Druck | MASTR",
+        "description": "Lautes, transparentes Mastering für Club-Tracks. Erreiche -8.5 LUFS ohne Verzerrung mit kristallklarer Kick-Bass-Trennung.",
+        "h1": "House & Electronic Music Mastering",
+        "intro": "Von Deep House bis Peak-Time Techno: Verschaffe deinen Drops das maximale Low-End-Fundament und ein raumfüllendes Stereobild, das auf jeder Festival-PA überzeugt.",
+        "problemTitle": "Warum elektronische Musik anspruchsvoll zu mastern ist",
+        "problemDesc": "Tiefe Subbässe fressen Headroom. Bei falscher Kompression pumpt der Track unangenehm und verliert seinen Groove.",
+        "solutionTitle": "Sidechain-bewusster Limiter & Stereo-Politur",
+        "solutionDesc": "Unser Club & EDM Preset analysiert Phasenbeziehungen und fokussiert das Low-End mono, während die High-Hats und Synths im Raum schweben.",
+        "faq1Q": "Wird der Bass mono-kompatibel gemacht?",
+        "faq1A": "Ja, alle Frequenzen unter 100 Hz werden automatisch monokompatibel zentriert, um Phasenschweinereien auf Clubanlagen zu vermeiden.",
+        "faq2Q": "Wie laut wird mein Master?",
+        "faq2A": "Das Club-Preset zielt auf -8.5 bis -7.5 LUFS mit True-Peak-Sicherheit bei -0.3 dBFS."
+      },
+      "hip-hop-beats": {
+        "title": "Hip-Hop & Trap Beat Mastering Online | MASTR",
+        "description": "Erschütternde 808s, scharfe Snares und dominanter Vocal-Headroom. Das professionelle Mastering-Tool für Trap- und Boom-Bap-Produzenten.",
+        "h1": "Hip-Hop & Trap Beat Mastering",
+        "intro": "Lass deine 808s durch jede Smartphone-Box und jedes Subwoofersystem hämmern, ohne dass die Vocals oder Snares untergehen.",
+        "problemTitle": "Das 808-Dilemma im Mix",
+        "problemDesc": "Verzerrte oder überlagerte 808s übersteuern den Mixbus und führen zu flachen, matschigen Beats.",
+        "solutionTitle": "Harmonische Sättigung & Transientenschutz",
+        "solutionDesc": "MASTR fügt gezielte Obertöne hinzu, damit tiefe Bässe auch auf kleinen Lautsprechern hörbar bleiben, während Transienten knackig bleiben.",
+        "faq1Q": "Eignet sich das Tool auch für fertige Songs mit Gesang?",
+        "faq1A": "Absolut. Nutze den Vocal-Clarity Regler im Pro Mode, um Stimmen exakt nach vorne zu holen.",
+        "faq2Q": "Kann ich Beats mit BeatStars-Vorgaben exportieren?",
+        "faq2A": "Ja, MASTR liefert streaming- und leasereife WAV- und MP3-Dateien nach Industriestandard."
+      },
+      "podcasts": {
+        "title": "Podcast & Voice Audio Mastering Online | MASTR",
+        "description": "Konsistente Sprachlautstärke, Rauschentfernung und professionelle Sprachverständlichkeit für Podcasts und Hörbücher.",
+        "h1": "Podcast & Voice Mastering",
+        "intro": "Sorge für eine gleichmäßige Sprecherlautstärke, angenehme Nahbesprechungseffekte und perfekten EBU R128 (-16 LUFS) Standard für alle Podcast-Verzeichnisse.",
+        "problemTitle": "Schwankende Pegel und störende Zischlaute",
+        "problemDesc": "Unterschiedliche Mikrofone oder Raumbedingungen machen das Zuhören über Kopfhörer anstrengend.",
+        "solutionTitle": "Sprecher-Optimiertes Leveling & De-Essing",
+        "solutionDesc": "Automatisches Multiband-Leveling gleicht Lautstärkesprünge zwischen Moderatoren aus und dämpft scharfe S-Laute.",
+        "faq1Q": "Welches Lautheitslevel wird für Podcasts genutzt?",
+        "faq1A": "Wir mastern Podcasts nach dem weltweiten Broadcast-Standard -16 LUFS (Stereo) bzw. -19 LUFS (Mono).",
+        "faq2Q": "Werden Hintergrundgeräusche reduziert?",
+        "faq2A": "Sanftes spektrales Gating dämpft Raumhall und konstantes Grundrauschen ab."
+      }
+    }
+  },
+  "download": {
+    "wav_button": "Master herunterladen (24-Bit WAV)",
+    "mp3_button": "MP3-Vorschau (320 kbps)",
+    "badge_quality": "24-Bit / 44.1 kHz HD PCM",
+    "badge_broadcast": "Broadcast & Streaming Ready",
+    "downloading": "Download wird gestartet..."
+  }
+}

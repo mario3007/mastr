@@ -1,0 +1,287 @@
+{
+  "common": {
+    "brand": "MASTR",
+    "tagline": "AI Audio Mastering Studio",
+    "navHome": "Studio",
+    "navPricing": "Pricing",
+    "navUseCases": "Use Cases",
+    "navApi": "API",
+    "creditsLeft": "{count} Credits left",
+    "freeCreditsBadge": "Free",
+    "getMoreCredits": "Top Up Credits",
+    "login": "Sign In",
+    "logout": "Sign Out",
+    "close": "Close",
+    "loading": "Loading...",
+    "errorGeneric": "An unexpected error occurred.",
+    "footerRights": "All rights reserved.",
+    "footerLegal": "Privacy & Legal Notice",
+    "language": "Language"
+  },
+  "hero": {
+    "badge": "Next-Gen Audio Mastering v2.0",
+    "title": "Studio-Grade Audio Mastering in Seconds",
+    "subtitle": "Precision AI mastering engineered for producers, beatmakers, and Suno AI artists. Authentic analog warmth, automatic gain-matching, and pristine dynamic range.",
+    "ctaUpload": "Master Track Now",
+    "ctaDemo": "Listen to A/B Demos",
+    "load_demo": "Load Demo Track (Tech House Preview)",
+    "pillWav": "Lossless 24-Bit WAV",
+    "pillSpeed": "Rendered in Under 30s",
+    "pillGain": "True A/B Gain-Matching"
+  },
+  "auth": {
+    "modalTitle": "Sign In to MASTR Studio",
+    "modalSubtitle": "Save your masters in your vault and unlock 2 free high-resolution mastering credits.",
+    "googleButton": "Continue with Google",
+    "appleButton": "Continue with Apple",
+    "orEmail": "Or sign in via secure magic link",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "your.name@studio.com",
+    "sendMagicLink": "Send Magic Link",
+    "linkSentSuccess": "We've sent a magic link to your email! Please check your inbox.",
+    "userProfile": "My Account"
+  },
+  "player": {
+    "dropzoneTitle": "Drop audio file here or browse",
+    "dropzoneSubtitle": "Supports WAV, MP3, FLAC & AIFF (up to 250 MB)",
+    "uploadingToStorage": "Uploading to Cloudflare R2 storage...",
+    "uploadProgress": "Cloud Upload ({progress}%)...",
+    "uploadError": "Upload to Cloudflare R2 failed. Please try again.",
+    "retryUpload": "Retry upload",
+    "orText": "OR",
+    "sunoUrlLabel": "Paste Suno Track URL",
+    "sunoUrlPlaceholder": "https://suno.com/song/...",
+    "sunoImportButton": "Import Track",
+    "sunoDetectedBadge": "Suno Track detected • AI Restoration & De-Harshing active",
+    "stepHighpass": "Filtering Highpass & Sub-Rumble...",
+    "stepBassMono": "Intelligent Bass-Mono Matrix...",
+    "stepDynamicEq": "Dynamic EQ & Spectral Balancing...",
+    "stepSaturation": "Analog Tape Saturation & Harmonics...",
+    "stepLimiter": "True-Peak Brickwall Limiter (-0.5 dBTP)...",
+    "stepExporting": "Rendering 24-Bit WAV & 320k Preview...",
+    "trackLoaded": "Loaded Track: {name}",
+    "backToUpload": "Choose different track",
+    "versionsLabel": "Mastered Versions",
+    "masterTab": "{name}",
+    "originalBadge": "Original (A)",
+    "masteredBadge": "PulseMaster (B)",
+    "switchLabel": "A/B Compare",
+    "gainMatchToggle": "Gain Match (Loudness Compensation)",
+    "gainMatchTooltip": "Automatically adjusts original playback volume to match mastered level (-{db} dB) so you judge sonic character without loudness bias.",
+    "play": "Play",
+    "pause": "Pause",
+    "analyzing": "Analyzing audio signal...",
+    "processing": "Mastering DSP pipeline running ({progress}%)...",
+    "ready": "Mastering Complete",
+    "startMastering": "Start Mastering",
+    "notMasteredYet": "Ready to Master",
+    "choosePresetPrompt": "Select preset & sound settings, then start mastering",
+    "masterWithPreset": "Master now with {preset}",
+    "downloadButton": "Download Mastered Track",
+    "reMasterButton": "Re-Master",
+    "lufsIn": "Input LUFS: {value}",
+    "lufsOut": "Output LUFS: {value}",
+    "dynamicRange": "Dynamic Range: {value} LU",
+    "meterInput": "Input",
+    "meterOutput": "Output",
+    "meterDynamics": "Dynamics"
+  },
+  "presets": {
+    "modeEasy": "Easy Mode",
+    "modePro": "Pro Studio Mode",
+    "intensityLabel": "Mastering Intensity",
+    "intensityTooltip": "Controls the blend of compression, saturation, and limiting (0-100%).",
+    "activeBadge": "Active",
+    "selectBadge": "Select",
+    "groove_soul": {
+      "title": "Groove & Soul",
+      "desc": "Deep House, UK Garage & Nu-Disco. Bouncy low-end contour, analog tape warmth, and silky top end.",
+      "tag": "-11.0 LUFS"
+    },
+    "club_punch": {
+      "title": "Club Punch",
+      "desc": "Heavy Club, Tech House, EDM & Festival. Maximum punch, tight mono sub-bass, and uncompromised limiting.",
+      "tag": "-8.5 LUFS"
+    },
+    "warm_tape": {
+      "title": "Warm Tape",
+      "desc": "Lo-Fi, R&B, Indie & Vintage. Rich harmonic tanh saturation with organic, gentle high-frequency roll-off.",
+      "tag": "-13.0 LUFS"
+    },
+    "vocal_pop": {
+      "title": "Vocal Pop",
+      "desc": "Modern Pop, Radio & Trap. Surgical de-boxiness cut, luminous vocal presence at 3.2 kHz, and silky air band.",
+      "tag": "-10.5 LUFS"
+    },
+    "suno_enhancer": {
+      "title": "Suno / AI Enhancer",
+      "desc": "AI audio restoration for Suno/Udio tracks. Sub-bass reconstruction, anti-harshness notch at 4.1 kHz, and stereo depth.",
+      "tag": "-9.5 LUFS"
+    },
+    "auto_ai": {
+      "title": "Auto AI Match",
+      "desc": "Intelligent frequency balancing and dynamic shaping calibrated for modern streaming releases.",
+      "tag": "All-Rounder"
+    },
+    "suno_enhancer": {
+      "title": "Suno / AI Enhancer",
+      "desc": "Engineered to revive sub-bass loss, tame harsh metallic highs (de-harsh), and restore stereo depth in AI audio.",
+      "tag": "AI Specialist"
+    },
+    "club_edm": {
+      "title": "Club & EDM (-8.5 LUFS)",
+      "desc": "Heavy low-end punch, transparent loud limiting, and wider stereo presence built for festival systems.",
+      "tag": "Maximum Loudness"
+    },
+    "streaming_balanced": {
+      "title": "Streaming Balanced (-14 LUFS)",
+      "desc": "Perfect calibration for Spotify, Apple Music & YouTube without secondary loudness penalty.",
+      "tag": "Streaming-Ready"
+    }
+  },
+  "pro_controls": {
+    "headline": "Precision Parameters",
+    "low_end_punch": {
+      "title": "Low-End Punch",
+      "desc": "Sub-bass definition and punch focused between 45 Hz - 90 Hz."
+    },
+    "stereo_width": {
+      "title": "Stereo Width",
+      "desc": "M/S matrix expansion for panoramic immersion without phase cancellation."
+    },
+    "vocal_clarity": {
+      "title": "Vocal Clarity",
+      "desc": "Mid-range harmonic presence boost for upfront vocals and lead synths."
+    },
+    "tape_drive": {
+      "title": "Tape Drive",
+      "desc": "Warm vintage analog tape saturation and subtle harmonic overtones."
+    },
+    "lufs_target": {
+      "label": "Target Loudness (LUFS)",
+      "desc": "Select the target integrated loudness for your release channel."
+    },
+    "reference_track": {
+      "label": "Reference Track (Optional)",
+      "placeholder": "Drag and drop a reference track (.wav / .mp3) for spectral curve matching",
+      "remove": "Remove"
+    },
+    "resetDefaults": "Reset Parameters"
+  },
+  "pricing": {
+    "modalTitle": "Choose Your Mastering Plan",
+    "modalSubtitle": "No hidden subscription traps. Full commercial ownership of all output files.",
+    "payAsYouGo": "Pay As You Go",
+    "subscription": "Creator Plan",
+    "single": {
+      "title": "1 Master Credit",
+      "price": "$3.99",
+      "desc": "Ideal for single releases and casual tests",
+      "features": [
+        "1 Lossless 24-Bit WAV Master",
+        "All AI & Pro Presets included",
+        "A/B Synchronous Studio Player preview",
+        "No subscription, credits never expire"
+      ],
+      "cta": "Buy 1 Credit"
+    },
+    "bundle": {
+      "badge": "Most Popular",
+      "title": "5-Pack Credits",
+      "price": "$12.99",
+      "desc": "Save over 35% compared to single purchases ($2.60 per master)",
+      "features": [
+        "5 Lossless 24-Bit WAV Masters",
+        "Priority cloud processing queue",
+        "Reference track spectral matching",
+        "Commercial release license for streaming & clubs"
+      ],
+      "cta": "Get 5-Pack"
+    },
+    "creator": {
+      "badge": "Best Value",
+      "title": "Creator Pro",
+      "price": "$9.99",
+      "interval": "per month",
+      "desc": "For active music producers, beatmakers, and podcasters",
+      "features": [
+        "15 Masters included every month",
+        "Unused credits roll over automatically",
+        "Direct API access & batch mastering",
+        "VIP support & early access to new neural models"
+      ],
+      "cta": "Start Subscription"
+    },
+    "securityNote": "256-Bit SSL encrypted transactions. Cancel anytime in 1 click."
+  },
+  "seo": {
+    "defaultTitle": "MASTR - Professional AI Audio Mastering Studio Online",
+    "defaultDescription": "Master your music in studio quality with artificial intelligence. Optimized for Suno AI, EDM, Hip-Hop, and streaming platforms with synchronous A/B waveform comparison.",
+    "keywords": "audio mastering online, ai mastering, suno ai mastering, music mastering online, wav mastering, lufs normalizer",
+    "usecases": {
+      "suno-ai": {
+        "title": "Suno AI Mastering: Elevate AI Tracks to Studio Standards | MASTR",
+        "description": "Eliminate synthetic harshness, reconstruct punchy sub-bass, and bring your Suno AI music to competitive radio and Spotify volume.",
+        "h1": "Master & Polish Suno AI Music",
+        "intro": "Suno generates brilliant compositions but often suffers from hollow sub-bass and harsh metallic trebles. Our purpose-trained AI mastering engine cures audio artifacts and injects analog warmth.",
+        "problemTitle": "The Raw AI Audio Challenge",
+        "problemDesc": "AI audio generators output heavily compressed files with fizzy top ends and muddy low-mids that sound thin on club PAs and studio monitors.",
+        "solutionTitle": "The MASTR Suno-Enhancer Solution",
+        "solutionDesc": "With specialized de-harshing, sub-harmonic bass synthesis, and dynamic multiband compression, your Suno songs sound studio-finished.",
+        "faq1Q": "Can I import tracks directly via Suno URL?",
+        "faq1A": "Yes! Paste any public Suno song link into our player input, and MASTR extracts the track in highest available bit rate.",
+        "faq2Q": "Is the master ready for Spotify and Apple Music?",
+        "faq2A": "Yes, you download pristine 24-bit WAV files mastered to -14 LUFS or -8.5 LUFS meeting all distributor delivery specifications."
+      },
+      "house-music": {
+        "title": "House & EDM Mastering Online: Peak Club Punch | MASTR",
+        "description": "Loud, transparent mastering for club releases. Hit -8.5 LUFS without distortion while keeping clean kick-bass separation.",
+        "h1": "House & Electronic Music Mastering",
+        "intro": "From deep house to festival techno: give your drops thunderous low-end weight and wide stereo imaging that cuts through massive club sound systems.",
+        "problemTitle": "Why Electronic Music Demands Specialized Mastering",
+        "problemDesc": "Deep sub-frequencies quickly eat headroom. Over-compression causes muddy pumping and drains groove momentum.",
+        "solutionTitle": "Sidechain-Aware Limiting & Stereo Polish",
+        "solutionDesc": "Our Club & EDM preset centers sub-bass mono while enhancing stereo width and high-frequency sparkle with zero phase cancellation.",
+        "faq1Q": "Is the low-end mono-compatible?",
+        "faq1A": "Yes, frequencies below 100 Hz are centered in mono to prevent phase issues on large club subwoofer arrays.",
+        "faq2Q": "How loud will my master be?",
+        "faq2A": "The Club preset targets -8.5 to -7.5 LUFS with strict True-Peak compliance at -0.3 dBFS."
+      },
+      "hip-hop-beats": {
+        "title": "Hip-Hop & Trap Beat Mastering Online | MASTR",
+        "description": "Earth-shaking 808s, snappy snares, and vocal headroom. The dedicated mastering studio for beatmakers and artists.",
+        "h1": "Hip-Hop & Trap Beat Mastering",
+        "intro": "Ensure your 808s hit hard across smartphone speakers, car sound systems, and studio monitors without drowning out vocals.",
+        "problemTitle": "The 808 Headroom Dilemma",
+        "problemDesc": "Excessive or distorted 808 bass triggers clunky limiter action, leading to flat, squashed drums.",
+        "solutionTitle": "Harmonic Saturation & Transient Preservation",
+        "solutionDesc": "MASTR injects strategic overtones so deep sub frequencies register clearly on small speakers while transient attacks stay crisp.",
+        "faq1Q": "Does this work on tracks with recorded vocals?",
+        "faq1A": "Absolutely. Use the Vocal Clarity slider in Pro Mode to keep vocal performances focused and upfront.",
+        "faq2Q": "Can I export stems or BeatStars-ready files?",
+        "faq2A": "Yes, MASTR generates 24-bit WAV files ready for commercial licensing, distribution, and leasing platforms."
+      },
+      "podcasts": {
+        "title": "Podcast & Voice Mastering Online | MASTR",
+        "description": "Consistent speech volume, room noise attenuation, and crystal-clear vocal presence for podcasts and audiobooks.",
+        "h1": "Podcast & Spoken Word Mastering",
+        "intro": "Deliver balanced speaker levels, intimate proximity tone, and strict broadcast standard compliance (-16 LUFS stereo / -19 LUFS mono).",
+        "problemTitle": "Inconsistent Speaker Levels & Room Acoustics",
+        "problemDesc": "Varying recording distances and microphone differences cause listener fatigue over long listening sessions.",
+        "solutionTitle": "Dialogue-Optimized Leveling & De-Essing",
+        "solutionDesc": "Intelligent leveling automatically balances conversational dynamics and tames harsh sibilance for smooth listening.",
+        "faq1Q": "What loudness standard is applied for podcasts?",
+        "faq1A": "We master spoken content strictly to the international podcast standard: -16 LUFS for stereo and -19 LUFS for mono.",
+        "faq2Q": "Does it remove background noise?",
+        "faq2A": "Spectral noise floor attenuation gently reduces room resonance and constant ambient hum."
+      }
+    }
+  },
+  "download": {
+    "wav_button": "Download Master (24-Bit WAV)",
+    "mp3_button": "MP3 Preview (320 kbps)",
+    "badge_quality": "24-Bit / 44.1 kHz HD PCM",
+    "badge_broadcast": "Broadcast & Streaming Ready",
+    "downloading": "Starting download..."
+  }
+}
