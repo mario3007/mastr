@@ -1,9 +1,9 @@
+numpy==1.23.5
+scipy<=1.11.4
 runpod>=1.7.0
 matchering>=2.0.6
 pedalboard>=0.9.15
 pyloudnorm>=0.1.1
 soundfile>=0.12.1
-numpy>=1.24.0,<2.0.0
-scipy>=1.10.0,<1.13.0
 requests>=2.31.0
 audiosr
