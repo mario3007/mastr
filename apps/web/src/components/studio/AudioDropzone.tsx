@@ -62,32 +62,74 @@ export const AudioDropzone: React.FC<AudioDropzoneProps> = ({
       }
 
       // 2. Upload file directly to Cloudflare R2 via presigned link
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', uploadUrl);
-        xhr.setRequestHeader('Content-Type', file.type || 'audio/wav');
+      let uploadSucceeded = false;
 
-        xhr.upload.onprogress = (evt) => {
-          if (evt.lengthComputable) {
-            const percent = Math.min(100, Math.round((evt.loaded / evt.total) * 100));
-            setUploadProgress(percent);
-          }
-        };
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', uploadUrl);
+          xhr.setRequestHeader('Content-Type', file.type || 'audio/wav');
 
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
-          } else {
-            reject(new Error(`Storage responded with HTTP ${xhr.status}`));
-          }
-        };
+          xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+              const percent = Math.min(100, Math.round((evt.loaded / evt.total) * 100));
+              setUploadProgress(percent);
+            }
+          };
 
-        xhr.onerror = () => {
-          reject(new Error('Network error during storage upload'));
-        };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve();
+            } else {
+              reject(new Error(`Storage responded with HTTP ${xhr.status}`));
+            }
+          };
 
-        xhr.send(file);
-      });
+          xhr.onerror = () => {
+            reject(new Error('Network error during storage upload'));
+          };
+
+          xhr.send(file);
+        });
+        uploadSucceeded = true;
+      } catch (directErr) {
+        console.warn('Direct client upload to R2 failed (e.g. CORS or network restriction). Falling back to server upload...', directErr);
+      }
+
+      // Fallback: Upload via server-side API proxy to Cloudflare R2
+      if (!uploadSucceeded) {
+        setUploadProgress(10);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('jobId', jobId);
+        formData.append('key', fileKey);
+
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', '/api/upload-session');
+
+          xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+              const percent = Math.min(100, Math.round((evt.loaded / evt.total) * 100));
+              setUploadProgress(percent);
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve();
+            } else {
+              reject(new Error(`Server upload fallback failed with HTTP ${xhr.status}`));
+            }
+          };
+
+          xhr.onerror = () => {
+            reject(new Error('Network error during storage upload fallback'));
+          };
+
+          xhr.send(formData);
+        });
+      }
 
       setIsUploading(false);
       onFileSelect(file, { jobId, fileKey, uploadUrl });
