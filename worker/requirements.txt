@@ -8,4 +8,4 @@ numpy>=1.26.0
 requests>=2.31.0
 torch
 torchaudio
-git+https://github.com/haoheliu/AudioSR.git
+audiosr
