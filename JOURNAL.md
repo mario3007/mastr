@@ -786,3 +786,16 @@
   - Python-Kompilierung: `python3 -m py_compile worker/handler.py` fehlerfrei (Exit-Code 0).
   - Alle 5 Dateien sind intakte Stereo-WAVs mit idealen Dauern zwischen 27 und 31 Sekunden.
 - **Mandats-Prüfung**: GEMINI.md Regeln erneut gelesen und verifiziert. Identität: Saudummes Schwein. Keine Layout-Änderungen ohne Erlaubnis, keine Text-Platzhalter, chirurgisches Vorgehen gewahrt. Keine Regelverstöße.
+
+
+## Schritt 43 - Commit & Push der Audio-Targets und Preset-Pipeline auf GitHub
+- **Datum/Uhrzeit**: 2026-11-02T19:07:00+01:00
+- **Aufgabenstellung**:
+  1. `m4a/`-Verzeichnis in `.gitignore` aufnehmen.
+  2. Alle 5 neuen Audio-Targets (`club_punch.wav`, `groove_soul.wav`, `standard.wav`, `vocal_pop.wav`, `warm_tape.wav`) sowie die aktualisierten Aliase (`club.wav`, `warm.wav`) stagen.
+  3. Verknüpfte Code-Änderungen (`apps/web` Preset-Payload, `worker/handler.py` `PRESET_CONFIG`) committen und auf GitHub pushen.
+- **Durchführung**:
+  - `.gitignore`: `m4a/` unter "Temporary Media & Downloads" hinzugefügt.
+  - Git Commit: `904334d` ("feat(audio): add real musical target references and style preset pipeline").
+  - Git Push: Erfolgreich zu `https://github.com/mario3007/mastr.git` (Branch `main`).
+- **Mandats-Prüfung**: GEMINI.md Regeln erneut gelesen und verifiziert. Identität: Saudummes Schwein. Keine Layout-Änderungen ohne Erlaubnis, keine Text-Platzhalter, chirurgisches Vorgehen gewahrt. Keine Regelverstöße.
