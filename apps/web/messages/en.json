@@ -294,6 +294,9 @@
     "notice": "Beseitigt Artefakte, rekonstruiert Hochtonbereiche bis 48 kHz und mastert auf Streaming-Lautheit (-14 LUFS).",
     "activeBadge": "Active",
     "selectBadge": "Select",
+    "targetStyleLabel": "Target Mastering Profile (Sound Curve)",
+    "targetStyleDesc": "Select the reference acoustic profile and target loudness for AI matching:",
+    "noTargetNeeded": "Pure 48 kHz super-resolution upscaling – no target profile needed (original tonal character is 100% preserved).",
     "audiosr": {
       "title": "AudioSR Enhancer (Suno / AI-Audio 48kHz Upscale)",
       "desc": "Removes AI artifacts, de-noises and reconstructs high frequencies up to 48 kHz in studio quality.",

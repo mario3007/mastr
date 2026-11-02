@@ -132,31 +132,61 @@ def create_mastering_reference(curve_type: str = "standard", duration_sec: float
     return stereo
 
 
-def resolve_target_file(preset: str) -> str:
-    """Select or generate the appropriate full-range reference curve WAV from targets directory."""
+PRESET_CONFIG = {
+    "club_punch": {
+        "target": "targets/club_punch.wav",
+        "target_lufs": -8.5,
+    },
+    "vocal_pop": {
+        "target": "targets/vocal_pop.wav",
+        "target_lufs": -10.5,
+    },
+    "warm_tape": {
+        "target": "targets/warm_tape.wav",
+        "target_lufs": -13.0,
+    },
+    "groove_soul": {
+        "target": "targets/groove_soul.wav",
+        "target_lufs": -11.0,
+    },
+}
+DEFAULT_PRESET = "club_punch"
+
+
+def resolve_target_file(preset: str) -> tuple:
+    """Select or generate the appropriate full-range reference curve WAV and target LUFS with fallback protection."""
     targets_dir = os.path.join(os.path.dirname(__file__), "targets")
     os.makedirs(targets_dir, exist_ok=True)
     preset_lower = (preset or "").lower().strip()
 
-    if any(k in preset_lower for k in ["club", "edm", "punch"]):
-        filename = "club.wav"
-        curve_type = "club"
-    elif any(k in preset_lower for k in ["warm", "tape", "analog"]):
-        filename = "warm.wav"
-        curve_type = "warm"
+    # Find matching config or fallback to DEFAULT_PRESET
+    if preset_lower in PRESET_CONFIG:
+        config_entry = PRESET_CONFIG[preset_lower]
     else:
-        filename = "standard.wav"
-        curve_type = "standard"
+        config_entry = PRESET_CONFIG[DEFAULT_PRESET]
 
-    target_path = os.path.join(targets_dir, filename)
+    target_relative_path = config_entry["target"]
+    target_lufs = config_entry["target_lufs"]
+    target_path = os.path.join(os.path.dirname(__file__), target_relative_path)
 
-    # Generate if not exists or if file size is surprisingly small
+    # Fallback protection: check if target WAV exists and is valid (> 10KB)
     if not os.path.exists(target_path) or os.path.getsize(target_path) < 10000:
-        logger.info(f"Generating studio-grade full-range reference target: {target_path} ({curve_type})...")
-        ref_audio = create_mastering_reference(curve_type=curve_type, duration_sec=15.0, sr=44100)
-        sf.write(target_path, ref_audio, 44100, subtype="PCM_24")
+        logger.warning(f"Target WAV {target_path} not found. Checking fallback standard target...")
+        fallback_path = os.path.join(targets_dir, "standard.wav")
+        if os.path.exists(fallback_path) and os.path.getsize(fallback_path) >= 10000:
+            logger.info(f"Using existing standard reference target fallback: {fallback_path}")
+            target_path = fallback_path
+        else:
+            logger.info(f"Generating studio-grade full-range reference target: {target_path}...")
+            curve_type = "standard"
+            if "club" in target_relative_path:
+                curve_type = "club"
+            elif "warm" in target_relative_path:
+                curve_type = "warm"
+            ref_audio = create_mastering_reference(curve_type=curve_type, duration_sec=15.0, sr=44100)
+            sf.write(target_path, ref_audio, 44100, subtype="PCM_24")
 
-    return target_path
+    return target_path, target_lufs
 
 
 def apply_pedalboard_limiting(input_path: str, output_path: str, target_lufs: float = -14.0, true_peak_ceiling_db: float = -1.0):
@@ -282,7 +312,10 @@ def handler(event: dict) -> dict:
     job_input = event.get("input", {})
     download_url = job_input.get("download_url")
     upload_url = job_input.get("upload_url")
-    preset = job_input.get("preset", "standard")
+    engine = (job_input.get("engine") or "").lower().strip()
+    preset = (job_input.get("preset") or DEFAULT_PRESET).lower().strip()
+    if preset not in PRESET_CONFIG:
+        preset = DEFAULT_PRESET
     duration = job_input.get("duration")
 
     if not download_url or not upload_url:
@@ -299,7 +332,7 @@ def handler(event: dict) -> dict:
     temp_files = [input_file, matchered_file, final_output_file]
 
     try:
-        logger.info(f"Starting job {job_id} for preset: {preset}")
+        logger.info(f"Starting job {job_id} with engine='{engine}', preset='{preset}'")
 
         # 1. Download source audio
         download_file(download_url, input_file)
@@ -307,15 +340,19 @@ def handler(event: dict) -> dict:
         in_info = sf.info(input_file)
         logger.info(f"Input audio specs: channels={in_info.channels}, samplerate={in_info.samplerate}, duration={in_info.duration:.2f}s")
 
-        # 2. Branch according to preset
-        if preset in ["suno_enhancer", "audiosr"]:
+        # 2. Branch according to engine & preset
+        # Pure AudioSR 48kHz Upscaling: No target curve enforced!
+        if engine in ["audio_sr", "audiosr"] or preset in ["audio_sr", "audiosr", "suno_enhancer"]:
+            logger.info("Running pure AudioSR 48kHz Upscaling (no target curve enforced)...")
             process_suno_enhancer(input_file, final_output_file)
-        elif preset in ["full", "ai_full", "full_chain"]:
-            logger.info("Running AI Full Chain: AudioSR Enhancement -> Matchering -> Limiter...")
+
+        # AI Full Chain: AudioSR Upscaling -> Matchering with Style Target -> Limiter
+        elif engine in ["full", "ai_full", "full_chain"]:
+            target_reference, target_lufs = resolve_target_file(preset)
+            logger.info(f"Running AI Full Chain: AudioSR Enhancement -> Matchering ({target_reference}) -> Limiter ({target_lufs} LUFS)...")
             sr_intermediate = os.path.join(temp_dir, "sr_intermediate.wav")
             temp_files.append(sr_intermediate)
             process_suno_enhancer(input_file, sr_intermediate)
-            target_reference = resolve_target_file("standard")
             mg.process(
                 target=sr_intermediate,
                 reference=target_reference,
@@ -324,12 +361,14 @@ def handler(event: dict) -> dict:
             apply_pedalboard_limiting(
                 input_path=matchered_file,
                 output_path=final_output_file,
-                target_lufs=-14.0,
+                target_lufs=target_lufs,
                 true_peak_ceiling_db=-1.0,
             )
+
+        # Matchering / Classic / Default: Matchering with Style Target -> Limiter
         else:
-            target_reference = resolve_target_file(preset)
-            logger.info(f"Using matchering target reference: {target_reference}")
+            target_reference, target_lufs = resolve_target_file(preset)
+            logger.info(f"Using matchering target reference: {target_reference} (target_lufs={target_lufs})")
 
             # Run Matchering process
             mg.process(
@@ -338,11 +377,11 @@ def handler(event: dict) -> dict:
                 results=[mg.pcm24(matchered_file)],
             )
 
-            # Apply Pedalboard Limiter (-14 LUFS / -1.0 dB True Peak)
+            # Apply Pedalboard Limiter with dynamic target_lufs
             apply_pedalboard_limiting(
                 input_path=matchered_file,
                 output_path=final_output_file,
-                target_lufs=-14.0,
+                target_lufs=target_lufs,
                 true_peak_ceiling_db=-1.0,
             )
 
@@ -352,6 +391,7 @@ def handler(event: dict) -> dict:
         return {
             "status": "COMPLETED",
             "job_id": job_id,
+            "engine": engine,
             "preset": preset,
             "duration": duration,
             "message": "Mastering completed and uploaded successfully.",

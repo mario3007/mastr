@@ -50,7 +50,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
 
   // Easy mode parameters
   const [intensity, setIntensity] = useState<number>(85);
-  const [selectedPreset, setSelectedPreset] = useState<PresetId>('groove_soul');
+  const [selectedPreset, setSelectedPreset] = useState<PresetId>('club_punch');
 
   // Pro mode parameters
   const [proSettings, setProSettings] = useState<ProSettings>({
@@ -92,18 +92,19 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
     dynamicRange: number;
   } | null>(null);
 
+  const PRESET_LUFS_MAP: Record<string, number> = {
+    club_punch: -8.5,
+    club_edm: -8.5,
+    suno_enhancer: -9.5,
+    vocal_pop: -10.5,
+    groove_soul: -11.0,
+    warm_tape: -13.0,
+    streaming_balanced: -14.0,
+    auto_ai: -14.0,
+  };
+
   const getMasteringOptions = (overridePreset?: PresetId): MasteringOptions => {
     const preset = overridePreset ?? selectedPreset;
-    const presetLufsMap: Record<string, number> = {
-      club_punch: -8.5,
-      club_edm: -8.5,
-      suno_enhancer: -9.5,
-      vocal_pop: -10.5,
-      groove_soul: -11.0,
-      warm_tape: -13.0,
-      streaming_balanced: -14.0,
-      auto_ai: -14.0,
-    };
 
     return {
       jobId: currentJobId || undefined,
@@ -114,7 +115,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
       targetLufs:
         mode === 'pro'
           ? proSettings.lufsTarget
-          : presetLufsMap[preset] ?? -11.0,
+          : PRESET_LUFS_MAP[preset] ?? -11.0,
       lowEndMonoCutoff:
         preset === 'club_punch'
           ? 115.0
@@ -131,7 +132,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
   };
 
   const processMastering = async (
-    presetToProcess?: PresetId | AiPresetId,
+    presetToProcess?: string,
     fileOverride?: File,
     urlOverride?: string
   ) => {
@@ -140,7 +141,9 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
 
     if (!file && !url) return;
 
-    const activePreset = presetToProcess ?? (engine === 'ai' ? selectedAiPreset : selectedPreset);
+    const effectiveEngine = engine === 'ai' ? (selectedAiPreset === 'audiosr' ? 'audio_sr' : selectedAiPreset) : 'classic';
+    const effectivePreset = selectedPreset;
+    const cacheKey = presetToProcess ?? activePresetKey;
 
     setIsProcessing(true);
     setProgress(5);
@@ -148,7 +151,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
     setMasteringError(null);
 
     try {
-      const options = getMasteringOptions(engine === 'classic' ? (activePreset as PresetId) : undefined);
+      const options = getMasteringOptions(effectivePreset);
 
       let result;
       let effectiveJobId = currentJobId;
@@ -158,8 +161,8 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
         result = await processRunPodMastering(
           effectiveJobId,
           {
-            engine,
-            preset: activePreset,
+            engine: effectiveEngine,
+            preset: effectivePreset,
             inputKey: r2FileKey,
             targetLufs: options.targetLufs,
           },
@@ -209,7 +212,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
 
         setCachedMasters((prev) => ({
           ...prev,
-          [activePreset]: {
+          [cacheKey]: {
             jobId: finalJobId,
             wavUrl: finalDownloadUrl,
             mp3Url: finalDownloadUrl,
@@ -400,13 +403,24 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
     }
   };
 
-  const activePresetKey = engine === 'ai' ? selectedAiPreset : selectedPreset;
+  const activePresetKey =
+    engine === 'ai'
+      ? (selectedAiPreset === 'audiosr' ? 'audiosr' : `${selectedAiPreset}_${selectedPreset}`)
+      : selectedPreset;
   const isCurrentPresetRendered = Boolean(cachedMasters[activePresetKey]);
 
   const availableVersions = Object.keys(cachedMasters).map((presetKey) => {
     let label: string = presetKey;
     try {
-      if (['audiosr', 'matchering', 'full'].includes(presetKey)) {
+      if (presetKey === 'audiosr') {
+        label = tAi('audiosr.title');
+      } else if (presetKey.startsWith('matchering_')) {
+        const style = presetKey.replace('matchering_', '');
+        label = `AI Master • ${tPresets(`${style}.title` as any) || style}`;
+      } else if (presetKey.startsWith('full_')) {
+        const style = presetKey.replace('full_', '');
+        label = `Full AI • ${tPresets(`${style}.title` as any) || style}`;
+      } else if (['audiosr', 'matchering', 'full'].includes(presetKey)) {
         label = tAi(`${presetKey}.title` as any) || presetKey;
       } else {
         label = tPresets(`${presetKey}.title` as any) || presetKey;
@@ -480,6 +494,8 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
         <AiTiles
           selectedPreset={selectedAiPreset}
           onSelectPreset={handleSelectAiPreset}
+          selectedStylePreset={selectedPreset}
+          onSelectStylePreset={handleSelectPreset}
         />
       ) : (
         <div className="space-y-8">
@@ -560,7 +576,9 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
                   </h4>
                   <p className="text-xs text-studio-400">
                     {engine === 'ai'
-                      ? `${tAi(`${selectedAiPreset}.title` as any)} • ${tAi(`${selectedAiPreset}.tag` as any)}`
+                      ? (selectedAiPreset === 'audiosr'
+                          ? `${tAi('audiosr.title')} • ${tAi('audiosr.tag')}`
+                          : `${tAi(`${selectedAiPreset}.title` as any)} • ${tPresets(`${selectedPreset}.title` as any)} (${tPresets(`${selectedPreset}.tag` as any)})`)
                       : mode === 'pro'
                       ? tPresets('modePro')
                       : `${tPresets(`${selectedPreset}.title` as any)} • ${tPresets(`${selectedPreset}.tag` as any)}`}
@@ -578,7 +596,9 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
                     ? tPlayer('masterWithPreset', {
                         preset:
                           engine === 'ai'
-                            ? tAi(`${selectedAiPreset}.title` as any)
+                            ? (selectedAiPreset === 'audiosr'
+                                ? tAi('audiosr.tag')
+                                : `${tAi(`${selectedAiPreset}.tag` as any)} + ${tPresets(`${selectedPreset}.title` as any)}`)
                             : tPresets(`${selectedPreset}.title` as any),
                       })
                     : tPlayer('startMastering')}
@@ -615,20 +635,10 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({ onOpenPricingM
               cachedMasters[activePresetKey]?.metrics?.outputLufs ??
               measuredMetrics?.outputLufs ??
               (engine === 'ai'
-                ? -14.0
+                ? (selectedAiPreset === 'audiosr' ? -14.0 : (PRESET_LUFS_MAP[selectedPreset] ?? -10.5))
                 : mode === 'pro'
                 ? proSettings.lufsTarget
-                : selectedPreset === 'club_punch' || selectedPreset === 'club_edm'
-                ? -8.5
-                : selectedPreset === 'suno_enhancer'
-                ? -9.5
-                : selectedPreset === 'vocal_pop'
-                ? -10.5
-                : selectedPreset === 'groove_soul'
-                ? -11.0
-                : selectedPreset === 'warm_tape'
-                ? -13.0
-                : -14.0)
+                : PRESET_LUFS_MAP[selectedPreset] ?? -11.0)
             }
             dynamicRange={
               cachedMasters[activePresetKey]?.metrics?.dynamicRange ??

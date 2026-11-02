@@ -274,6 +274,17 @@ export async function pollJobStatus(
   });
 }
 
+export type RunPodEngine = 'full' | 'audio_sr' | 'matchering';
+export type RunPodPreset = 'club_punch' | 'warm_tape' | 'vocal_pop' | 'groove_soul';
+
+export interface RunPodProcessRequest {
+  jobId: string;
+  engine: RunPodEngine;
+  preset: RunPodPreset;
+  inputKey: string;
+  targetLufs?: number;
+}
+
 /**
  * Triggers mastering via RunPod serverless GPU pipeline (/api/process)
  * and handles both synchronous completion and asynchronous status polling (/api/status/[jobId]).
@@ -281,8 +292,8 @@ export async function pollJobStatus(
 export async function processRunPodMastering(
   jobId: string,
   options: {
-    engine?: 'classic' | 'ai';
-    preset?: string;
+    engine?: 'classic' | 'ai' | RunPodEngine | string;
+    preset?: RunPodPreset | string;
     inputKey?: string;
     targetLufs?: number;
   },
@@ -292,15 +303,32 @@ export async function processRunPodMastering(
     onProgress(15, 'phaseMastering');
   }
 
+  // Map to exact engine: "full" | "audio_sr" | "matchering"
+  let resolvedEngine: RunPodEngine = 'full';
+  if (options.engine === 'audio_sr' || options.engine === 'audiosr') {
+    resolvedEngine = 'audio_sr';
+  } else if (options.engine === 'matchering') {
+    resolvedEngine = 'matchering';
+  } else {
+    resolvedEngine = 'full';
+  }
+
+  // Map to exact preset: "club_punch" | "warm_tape" | "vocal_pop" | "groove_soul"
+  const validPresets: RunPodPreset[] = ['club_punch', 'warm_tape', 'vocal_pop', 'groove_soul'];
+  const resolvedPreset: RunPodPreset = validPresets.includes(options.preset as any)
+    ? (options.preset as RunPodPreset)
+    : 'club_punch';
+
   // 1. Dispatch job to /api/process
   const res = await fetch('/api/process', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       jobId,
-      engine: options.engine || 'ai',
-      preset: options.preset || (options.engine === 'classic' ? 'standard' : 'full'),
+      engine: resolvedEngine,
+      preset: resolvedPreset,
       inputKey: options.inputKey,
+      targetLufs: options.targetLufs,
     }),
   });
 

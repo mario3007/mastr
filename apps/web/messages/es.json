@@ -294,6 +294,9 @@
     "notice": "Elimina artefactos, reconstruye frecuencias altas hasta 48 kHz y masteriza a sonoridad de streaming (-14 LUFS).",
     "activeBadge": "Activo",
     "selectBadge": "Seleccionar",
+    "targetStyleLabel": "Perfil de masterización objetivo (Curva de sonido)",
+    "targetStyleDesc": "Selecciona el perfil acústico de referencia y la sonoridad objetivo para el emparejamiento con IA:",
+    "noTargetNeeded": "Escalado super-resolución puro a 48 kHz: no se requiere perfil objetivo (el timbre original se preserva al 100%).",
     "audiosr": {
       "title": "AudioSR Enhancer (Suno / AI-Audio 48kHz Upscale)",
       "desc": "Elimina artefactos de IA, reduce ruido y reconstruye frecuencias altas hasta 48 kHz.",

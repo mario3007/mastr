@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { jobId, engine = 'ai', preset = 'standard', inputKey } = body;
+    const { jobId, engine = 'ai', preset = 'club_punch', inputKey } = body;
 
     if (!jobId || typeof jobId !== 'string') {
       return NextResponse.json(
@@ -49,18 +49,25 @@ export async function POST(req: NextRequest) {
     const endpointId = process.env.RUNPOD_ENDPOINT_ID || env.RUNPOD_ENDPOINT_ID || 'j5xlp990dz5bwy';
     const apiKey = process.env.RUNPOD_API_KEY || env.RUNPOD_API_KEY;
 
-    // Resolve target preset for RunPod worker
-    let resolvedPreset = typeof preset === 'string' && preset.trim() ? preset.trim() : 'standard';
-    if (engine === 'ai' && !preset) {
-      resolvedPreset = 'full';
+    // Resolve target preset and engine for RunPod worker
+    let resolvedEngine: 'full' | 'audio_sr' | 'matchering' = 'full';
+    if (engine === 'audio_sr' || engine === 'audiosr') {
+      resolvedEngine = 'audio_sr';
+    } else if (engine === 'matchering') {
+      resolvedEngine = 'matchering';
+    } else {
+      resolvedEngine = 'full';
     }
+
+    const validPresets = ['club_punch', 'warm_tape', 'vocal_pop', 'groove_soul'] as const;
+    const resolvedPreset = validPresets.includes(preset as any) ? preset : 'club_punch';
 
     const payload = {
       input: {
         download_url: downloadUrl,
         upload_url: uploadUrl,
+        engine: resolvedEngine,
         preset: resolvedPreset,
-        engine: engine === 'classic' ? 'classic' : 'ai',
       },
     };
 
