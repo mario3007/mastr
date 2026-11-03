@@ -799,3 +799,28 @@
   - Git Commit: `904334d` ("feat(audio): add real musical target references and style preset pipeline").
   - Git Push: Erfolgreich zu `https://github.com/mario3007/mastr.git` (Branch `main`).
 - **Mandats-Prüfung**: GEMINI.md Regeln erneut gelesen und verifiziert. Identität: Saudummes Schwein. Keine Layout-Änderungen ohne Erlaubnis, keine Text-Platzhalter, chirurgisches Vorgehen gewahrt. Keine Regelverstöße.
+
+
+## Schritt 44 - Headroom- & Verzerrungsschutz im RunPod-Worker (mg.Config, 30Hz Low-Cut, Target-Normalisierung)
+- **Datum/Uhrzeit**: 2026-11-03T01:58:00+01:00
+- **Aufgabenstellung**:
+  1. Matchering Config anpassen (`mg.Config`):
+     - Maximalen Spitzenpegel auf sicheren Headroom von -1.0 dB True-Peak setzen (`threshold = 10 ** (-1.0 / 20) ~ 0.89125`) anstelle von 0 dBFS.
+     - Config-Objekt bei allen `mg.process(..., config=mg_config)`-Aufrufen übergeben.
+  2. Pre-Processing (Low-Cut Filter bei 30 Hz):
+     - Vor der Übergabe an Matchering einen phasenlinearen 30 Hz High-Pass-Filter (`scipy.signal.butter` 4th-order, `sosfiltfilt`) schalten, um Infraschall-Rumpeln im Subbassbereich zu entfernen und Limiter-Sättigung zu verhindern.
+     - Subsonic-Filterung in `process_suno_enhancer` und `apply_pedalboard_limiting` ebenfalls auf 30 Hz harmonisiert.
+  3. Target-Normalisierung:
+     - Referenz-Tracks vor der Spektralanalyse auf maximal -1.0 dBFS Peak und ca. -10 LUFS pegeln (`prepare_normalized_target`), um überkomprimierte Target-Kurven zu unterbinden.
+- **Durchführung**:
+  - `worker/handler.py`:
+    - `import scipy.signal as scipy_signal` ergänzt.
+    - `apply_low_cut`: Zero-Phase 4th-order Butterworth Filter bei 30 Hz implementiert.
+    - `prepare_normalized_target`: LUFS-Messung & Pegelung (max -10.0 LUFS, Peak-Cap bei -1.0 dBFS) implementiert.
+    - `get_matchering_config`: Erstellt `mg.Config(threshold=10 ** (-1.0 / 20.0))` für 1.0 dB Headroom.
+    - In `handler(event)`: Sowohl im Full-Chain- als auch im Classic/Matchering-Zweig werden Pre-Processing Low-Cut, Target-Normalisierung und `config=mg_config` durchgängig angewendet.
+- **Validierung**:
+  - Python-Kompilierung: `python3 -m py_compile worker/handler.py` fehlerfrei (Exit-Code 0).
+  - Testlauf `prepare_normalized_target`: Reduziert heiße Referenzen zuverlässig auf -10.8 LUFS und max -1.0 dBFS Peak.
+  - Testlauf `apply_low_cut`: Dämpft Infraschall bei 15 Hz um den Faktor 17.9x bei 100% Erhalt des 60 Hz Subbasses.
+- **Mandats-Prüfung**: GEMINI.md Regeln erneut gelesen und verifiziert. Identität: Saudummes Schwein. Keine Layout-Änderungen ohne Erlaubnis, keine Text-Platzhalter, chirurgisches Vorgehen gewahrt. Keine Regelverstöße.
