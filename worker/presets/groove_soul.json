@@ -1,0 +1,13 @@
+{
+  "name": "groove_soul",
+  "matchering": { "targets": ["groove_soul.wav"], "target_lufs": -12.0 },
+  "eq": [
+    { "type": "low_shelf", "freq": 100, "gain_db": 1.0, "q": 0.7 },
+    { "type": "peak", "freq": 320, "gain_db": -1.2, "q": 1.0 },
+    { "type": "peak", "freq": 2500, "gain_db": 0.6, "q": 0.9 },
+    { "type": "high_shelf", "freq": 9500, "gain_db": 0.8, "q": 0.7 }
+  ],
+  "comp": { "threshold_db": -19.0, "ratio": 1.6, "attack_ms": 30.0, "release_ms": 160.0 },
+  "saturation": { "drive_db": 2.5, "mix": 0.45 },
+  "output": { "target_lufs": -10.5, "true_peak_db": -1.0 }
+}

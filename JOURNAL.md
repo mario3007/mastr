@@ -824,3 +824,50 @@
   - Testlauf `prepare_normalized_target`: Reduziert heiße Referenzen zuverlässig auf -10.8 LUFS und max -1.0 dBFS Peak.
   - Testlauf `apply_low_cut`: Dämpft Infraschall bei 15 Hz um den Faktor 17.9x bei 100% Erhalt des 60 Hz Subbasses.
 - **Mandats-Prüfung**: GEMINI.md Regeln erneut gelesen und verifiziert. Identität: Saudummes Schwein. Keine Layout-Änderungen ohne Erlaubnis, keine Text-Platzhalter, chirurgisches Vorgehen gewahrt. Keine Regelverstöße.
+
+
+## Schritt 45 - Konsolidierung der Audio-Pipeline (worker/chain.py, JSON-Presets, handler.py & dsp/engine.py Umleitung)
+- **Datum/Uhrzeit**: 2026-11-16T22:19:00+01:00
+- **Aufgabenstellung**:
+  1. Konsolidierung der verstreuten Audio-Logik (`PRESET_CONFIG` in `worker/handler.py` und ungenutzte DSP-Kette in `services/worker/dsp/engine.py`) zu einer einzigen zentralen Pipeline.
+  2. Neue Datei `worker/chain.py` erstellen mit:
+     - `prepare_input`: Stufe 1 vor Matchering mit 30 Hz Low-Cut, Bass-Mono unter 120 Hz via M/S-Matrix und Butterworth 4. Ordnung (`scipy.signal.sosfiltfilt`), sowie Input-Gain-Absenkung bei übersteuerten KI-Quellen (> -11 LUFS).
+     - `load_preset`: Laden der Presets aus `worker/presets/*.json`.
+     - `apply_preset`: Stufe 3 nach Matchering mit parametrischem EQ (`_eq`), Glue-Kompressor, paralleler Sättigung (`Distortion`), Gain-Anpassung an Ziel-LUFS und True-Peak-Limiter.
+  3. Vier JSON-Presets unter `worker/presets/` anlegen:
+     - `club_punch.json`, `groove_soul.json`, `warm_tape.json`, `vocal_pop.json`.
+  4. `worker/handler.py` umbauen:
+     - `PRESET_CONFIG` und veraltete Teilketten entfernen.
+     - `load_preset`, `prepare_input` und `apply_preset` aus `chain.py` einbinden.
+     - Job-Ablauf: `load_preset_safe` (Fallback `vocal_pop`), `prepare_input` für Quell-Audio mit Logging von `in_metrics`, Referenz-WAV normalisieren auf `target_lufs` und `mg.process(...)` ausführen, `apply_preset` für gematchtes Audio mit Logging von `out_metrics`, Speichern als 24-Bit PCM WAV.
+  5. `worker/Dockerfile` anpassen:
+     - Explizites Kopieren von `chain.py`, `presets/` und `targets/` ins Docker-Image sicherstellen.
+  6. `services/worker/dsp/engine.py` aufräumen:
+     - Redundante DSP-Kette entfernt und direkte Weiterleitung an `worker/chain.py` (`load_preset`, `prepare_input`, `apply_preset`) implementiert.
+  7. Frontend (`apps/web`): Unberührt gelassen, Keys (`club_punch`, `groove_soul`, `warm_tape`, `vocal_pop`) bleiben unverändert.
+- **Durchführung**:
+  - `worker/chain.py` exakt nach Spezifikation angelegt.
+  - `worker/presets/club_punch.json`, `worker/presets/groove_soul.json`, `worker/presets/warm_tape.json`, `worker/presets/vocal_pop.json` angelegt.
+  - `worker/handler.py` chirurgisch aktualisiert (`load_preset_safe`, `resolve_target_file`, Einbindung von `prepare_input` und `apply_preset`, Metriken-Logging).
+  - `worker/Dockerfile` aktualisiert: `COPY chain.py`, `COPY presets/`, `COPY targets/`.
+  - `services/worker/dsp/engine.py` auf `worker/chain.py` umgeleitet und für `AudioMasteringEngine` konsolidiert.
+- **Validierung**:
+  - Python-Kompilierung: `python3.15 -m py_compile worker/chain.py worker/handler.py services/worker/dsp/engine.py services/worker/main.py` fehlerfrei (Exit-Code 0).
+  - JSON-Validierung: Alle 4 Preset-Dateien erfolgreich geparst und Struktur verifiziert.
+- **Mandats-Prüfung**: GEMINI.md Regeln erneut gelesen und verifiziert. Identität: Saudummes Schwein. Keine Layout-Änderungen ohne Erlaubnis, keine Text-Platzhalter, chirurgisches Vorgehen gewahrt. Keine Regelverstöße.
+
+
+## Schritt 46 - Audio-Targets Update, Git Push & Start der Web-Anwendung
+- **Datum/Uhrzeit**: 2026-11-16T22:52:00+01:00
+- **Aufgabenstellung**:
+  1. Hinzugefügte Audio-Dateien in `worker/targets/` (`groove_soul.wav`, `vocal_pop.wav`) erfassen und committen.
+  2. Alle Änderungen (neue Pipeline in `worker/chain.py`, Presets in `worker/presets/`, `worker/handler.py`, `worker/Dockerfile`, `services/worker/dsp/engine.py` und die neuen Target-WAVs) auf GitHub pushen.
+  3. Web-Anwendung (`apps/web`) im Dev-Modus starten.
+- **Durchführung**:
+  - `git add` und Commit aller Änderungen durchgeführt.
+  - `git push` zu remote origin/main ausgeführt.
+  - Next.js Dev-Server (`npm run dev`) als Hintergrundprozess gestartet.
+- **Validierung**:
+  - Git Push erfolgreich mit Exit-Code 0.
+  - Server läuft auf `http://localhost:3000`.
+- **Mandats-Prüfung**: GEMINI.md Regeln erneut gelesen und verifiziert. Identität: Saudummes Schwein. Keine Layout-Änderungen ohne Erlaubnis, keine Text-Platzhalter, chirurgisches Vorgehen gewahrt. Keine Regelverstöße.

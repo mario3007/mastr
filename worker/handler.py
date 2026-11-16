@@ -23,6 +23,8 @@ from pedalboard import Pedalboard, HighpassFilter, Compressor, Limiter
 from pedalboard.io import AudioFile
 import matchering as mg
 
+from chain import load_preset, prepare_input, apply_preset
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("mastr-worker")
@@ -133,42 +135,30 @@ def create_mastering_reference(curve_type: str = "standard", duration_sec: float
     return stereo
 
 
-PRESET_CONFIG = {
-    "club_punch": {
-        "target": "targets/club_punch.wav",
-        "target_lufs": -8.5,
-    },
-    "vocal_pop": {
-        "target": "targets/vocal_pop.wav",
-        "target_lufs": -10.5,
-    },
-    "warm_tape": {
-        "target": "targets/warm_tape.wav",
-        "target_lufs": -13.0,
-    },
-    "groove_soul": {
-        "target": "targets/groove_soul.wav",
-        "target_lufs": -11.0,
-    },
-}
-DEFAULT_PRESET = "club_punch"
+DEFAULT_PRESET = "vocal_pop"
 
 
-def resolve_target_file(preset: str) -> tuple:
-    """Select or generate the appropriate full-range reference curve WAV and target LUFS with fallback protection."""
+def load_preset_safe(name: str) -> dict:
+    """Load preset from JSON with fallback to vocal_pop."""
+    clean_name = (name or "").lower().strip()
+    try:
+        return load_preset(clean_name)
+    except Exception as e:
+        logger.warning(f"Failed to load preset '{name}': {e}. Falling back to '{DEFAULT_PRESET}'.")
+        return load_preset(DEFAULT_PRESET)
+
+
+def resolve_target_file(preset: dict) -> tuple:
+    """Select or generate the appropriate full-range reference curve WAV and target LUFS from preset definition."""
     targets_dir = os.path.join(os.path.dirname(__file__), "targets")
     os.makedirs(targets_dir, exist_ok=True)
-    preset_lower = (preset or "").lower().strip()
 
-    # Find matching config or fallback to DEFAULT_PRESET
-    if preset_lower in PRESET_CONFIG:
-        config_entry = PRESET_CONFIG[preset_lower]
-    else:
-        config_entry = PRESET_CONFIG[DEFAULT_PRESET]
+    match_cfg = preset.get("matchering", {})
+    target_names = match_cfg.get("targets", ["vocal_pop.wav"])
+    target_filename = target_names[0] if target_names else "vocal_pop.wav"
+    target_lufs = float(match_cfg.get("target_lufs", -11.5))
 
-    target_relative_path = config_entry["target"]
-    target_lufs = config_entry["target_lufs"]
-    target_path = os.path.join(os.path.dirname(__file__), target_relative_path)
+    target_path = os.path.join(targets_dir, target_filename)
 
     # Fallback protection: check if target WAV exists and is valid (> 10KB)
     if not os.path.exists(target_path) or os.path.getsize(target_path) < 10000:
@@ -180,9 +170,9 @@ def resolve_target_file(preset: str) -> tuple:
         else:
             logger.info(f"Generating studio-grade full-range reference target: {target_path}...")
             curve_type = "standard"
-            if "club" in target_relative_path:
+            if "club" in target_filename:
                 curve_type = "club"
-            elif "warm" in target_relative_path:
+            elif "warm" in target_filename:
                 curve_type = "warm"
             ref_audio = create_mastering_reference(curve_type=curve_type, duration_sec=15.0, sr=44100)
             sf.write(target_path, ref_audio, 44100, subtype="PCM_24")
@@ -190,28 +180,8 @@ def resolve_target_file(preset: str) -> tuple:
     return target_path, target_lufs
 
 
-def apply_low_cut(input_path: str, output_path: str, cutoff_hz: float = 30.0) -> str:
-    """Apply a zero-phase 30Hz high-pass low-cut filter to remove subsonic rumble before mastering."""
-    logger.info(f"Applying pre-processing low-cut filter ({cutoff_hz} Hz) to {input_path}...")
-    data, sample_rate = sf.read(input_path)
-    is_1d = data.ndim == 1
-    if is_1d:
-        data = np.column_stack([data, data])
-
-    # 4th-order Butterworth highpass with forward-backward zero-phase filtering
-    sos = scipy_signal.butter(4, cutoff_hz, btype="highpass", fs=sample_rate, output="sos")
-    filtered = scipy_signal.sosfiltfilt(sos, data, axis=0)
-
-    if is_1d:
-        filtered = filtered[:, 0]
-
-    sf.write(output_path, filtered, sample_rate, subtype="PCM_24" if input_path.endswith(".wav") else "PCM_16")
-    logger.info(f"Low-cut pre-filtering complete: saved to {output_path}")
-    return output_path
-
-
 def prepare_normalized_target(target_path: str, temp_dir: str, target_lufs: float = -10.0, max_peak_db: float = -1.0) -> str:
-    """Ensure target reference track is normalized to safe peak (<= -1.0 dBFS) and max -10.0 LUFS to prevent overcompressed target curves."""
+    """Ensure target reference track is normalized to safe peak (<= -1.0 dBFS) and max target_lufs to prevent overcompressed target curves."""
     logger.info(f"Validating and normalizing target reference {target_path} (max {max_peak_db} dBFS, target ~{target_lufs} LUFS)...")
     data, sample_rate = sf.read(target_path)
     if data.ndim == 1:
@@ -247,45 +217,6 @@ def get_matchering_config(headroom_db: float = -1.0) -> mg.Config:
     safe_threshold = float(10.0 ** (headroom_db / 20.0))
     logger.info(f"Configuring Matchering with threshold={safe_threshold:.4f} ({headroom_db} dB True Peak headroom)")
     return mg.Config(threshold=safe_threshold)
-
-
-def apply_pedalboard_limiting(input_path: str, output_path: str, target_lufs: float = -14.0, true_peak_ceiling_db: float = -1.0):
-    """Normalize loudness towards target_lufs and apply true-peak brickwall limiting without bass loss."""
-    logger.info(f"Applying Pedalboard Limiter targeting {target_lufs} LUFS / {true_peak_ceiling_db} dB True Peak...")
-
-    # Read audio for loudness measurement
-    data, sample_rate = sf.read(input_path)
-    if data.ndim == 1:
-        # Convert true mono to dual-channel stereo
-        data = np.column_stack([data, data])
-
-    meter = pyln.Meter(sample_rate)
-    try:
-        current_lufs = meter.integrated_loudness(data)
-    except Exception:
-        current_lufs = -20.0
-
-    # Calculate gain offset required for target loudness
-    if not np.isinf(current_lufs) and not np.isnan(current_lufs):
-        gain_db = target_lufs - current_lufs
-        # Soft clamp gain boost to avoid extreme distortions before limiting
-        gain_db = np.clip(gain_db, -18.0, 18.0)
-        gain_factor = 10.0 ** (gain_db / 20.0)
-        data = data * gain_factor
-
-    # Process through Pedalboard Limiter with 30Hz subsonic filter (preserving all bass down to 30 Hz)
-    board = Pedalboard([
-        HighpassFilter(cutoff_frequency_hz=30.0),
-        Limiter(threshold_db=true_peak_ceiling_db, release_ms=100.0),
-    ])
-
-    # Pedalboard expects (channels, samples)
-    audio_transposed = data.T.astype(np.float32)
-    effected = board(audio_transposed, sample_rate)
-
-    # Save final 24-bit PCM WAV (samples, channels)
-    sf.write(output_path, effected.T, sample_rate, subtype="PCM_24")
-    logger.info(f"Limiting complete: saved to {output_path} (channels={effected.shape[0]}, sr={sample_rate})")
 
 
 def process_suno_enhancer(input_path: str, output_path: str):
@@ -373,9 +304,9 @@ def handler(event: dict) -> dict:
     download_url = job_input.get("download_url")
     upload_url = job_input.get("upload_url")
     engine = (job_input.get("engine") or "").lower().strip()
-    preset = (job_input.get("preset") or DEFAULT_PRESET).lower().strip()
-    if preset not in PRESET_CONFIG:
-        preset = DEFAULT_PRESET
+    preset_name = (job_input.get("preset") or DEFAULT_PRESET).lower().strip()
+    preset = load_preset_safe(preset_name)
+    resolved_preset_name = preset.get("name", DEFAULT_PRESET)
     duration = job_input.get("duration")
 
     if not download_url or not upload_url:
@@ -392,7 +323,7 @@ def handler(event: dict) -> dict:
     temp_files = [input_file, matchered_file, final_output_file]
 
     try:
-        logger.info(f"Starting job {job_id} with engine='{engine}', preset='{preset}'")
+        logger.info(f"Starting job {job_id} with engine='{engine}', preset='{resolved_preset_name}'")
 
         # 1. Download source audio
         download_file(download_url, input_file)
@@ -402,53 +333,39 @@ def handler(event: dict) -> dict:
 
         # 2. Branch according to engine & preset
         # Pure AudioSR 48kHz Upscaling: No target curve enforced!
-        if engine in ["audio_sr", "audiosr"] or preset in ["audio_sr", "audiosr", "suno_enhancer"]:
+        if engine in ["audio_sr", "audiosr"] or preset_name in ["audio_sr", "audiosr", "suno_enhancer"]:
             logger.info("Running pure AudioSR 48kHz Upscaling (no target curve enforced)...")
             process_suno_enhancer(input_file, final_output_file)
 
-        # AI Full Chain: AudioSR Upscaling -> 30Hz Low-Cut -> Matchering with Normalized Target & Config -> Limiter
-        elif engine in ["full", "ai_full", "full_chain"]:
-            raw_target, target_lufs = resolve_target_file(preset)
-            normalized_target = prepare_normalized_target(raw_target, temp_dir, target_lufs=-10.0, max_peak_db=-1.0)
-            temp_files.append(normalized_target)
-
-            logger.info(f"Running AI Full Chain: AudioSR Enhancement -> 30Hz Low-Cut -> Matchering ({normalized_target}) -> Limiter ({target_lufs} LUFS)...")
-            sr_intermediate = os.path.join(temp_dir, "sr_intermediate.wav")
-            sr_clean = os.path.join(temp_dir, "sr_clean.wav")
-            temp_files.extend([sr_intermediate, sr_clean])
-
-            process_suno_enhancer(input_file, sr_intermediate)
-            apply_low_cut(sr_intermediate, sr_clean, cutoff_hz=30.0)
-
-            # Matchering with safe -1.0 dB True-Peak headroom config
-            mg_config = get_matchering_config(headroom_db=-1.0)
-            mg.process(
-                target=sr_clean,
-                reference=normalized_target,
-                results=[mg.pcm24(matchered_file)],
-                config=mg_config,
-            )
-            apply_pedalboard_limiting(
-                input_path=matchered_file,
-                output_path=final_output_file,
-                target_lufs=target_lufs,
-                true_peak_ceiling_db=-1.0,
-            )
-
-        # Matchering / Classic / Default: 30Hz Low-Cut -> Matchering with Normalized Target & Config -> Limiter
         else:
-            raw_target, target_lufs = resolve_target_file(preset)
-            normalized_target = prepare_normalized_target(raw_target, temp_dir, target_lufs=-10.0, max_peak_db=-1.0)
-            temp_files.append(normalized_target)
+            source_for_mastering = input_file
+            # AI Full Chain: AudioSR Enhancement pre-processing
+            if engine in ["full", "ai_full", "full_chain"]:
+                logger.info("Running AI Full Chain: AudioSR Enhancement pre-processing...")
+                sr_intermediate = os.path.join(temp_dir, "sr_intermediate.wav")
+                temp_files.append(sr_intermediate)
+                process_suno_enhancer(input_file, sr_intermediate)
+                source_for_mastering = sr_intermediate
 
-            logger.info(f"Using matchering target reference: {normalized_target} (target_lufs={target_lufs})")
+            # Quell-Audio als float32 (samples, channels) laden
+            audio_data, sr = sf.read(source_for_mastering, dtype="float32")
+            if audio_data.ndim == 1:
+                audio_data = np.column_stack([audio_data, audio_data])
 
-            # Pre-Processing: 30Hz zero-phase high-pass low-cut filter to prevent subsonic limiter saturation
+            # Stufe 1 (Vor Matchering): 30 Hz Low-Cut, Bass-Mono < 120 Hz, Input-Gain-Absenkung
+            cleaned, in_metrics = prepare_input(audio_data, sr)
+            logger.info(f"Stage 1 input metrics: {in_metrics}")
+
             preprocessed_input = os.path.join(temp_dir, "preprocessed_input.wav")
             temp_files.append(preprocessed_input)
-            apply_low_cut(input_file, preprocessed_input, cutoff_hz=30.0)
+            sf.write(preprocessed_input, cleaned, sr, subtype="PCM_24")
 
-            # Run Matchering process with safe -1.0 dB True-Peak headroom config
+            # Stufe 2: Referenz-WAV laden und vorab auf target_lufs absenken
+            raw_target, target_lufs = resolve_target_file(preset)
+            normalized_target = prepare_normalized_target(raw_target, temp_dir, target_lufs=target_lufs, max_peak_db=-1.0)
+            temp_files.append(normalized_target)
+
+            logger.info(f"Stage 2 Matchering process against: {normalized_target} (target_lufs={target_lufs})")
             mg_config = get_matchering_config(headroom_db=-1.0)
             mg.process(
                 target=preprocessed_input,
@@ -457,13 +374,15 @@ def handler(event: dict) -> dict:
                 config=mg_config,
             )
 
-            # Apply Pedalboard Limiter with dynamic target_lufs and -1.0 dB True-Peak ceiling
-            apply_pedalboard_limiting(
-                input_path=matchered_file,
-                output_path=final_output_file,
-                target_lufs=target_lufs,
-                true_peak_ceiling_db=-1.0,
-            )
+            # Stufe 3 (Nach Matchering): EQ -> Glue-Kompressor -> Parallele Sättigung -> Ziel-LUFS -> Limiter
+            matched_audio, match_sr = sf.read(matchered_file, dtype="float32")
+            if matched_audio.ndim == 1:
+                matched_audio = np.column_stack([matched_audio, matched_audio])
+
+            final_audio, out_metrics = apply_preset(matched_audio, match_sr, preset)
+            logger.info(f"Stage 3 output metrics: {out_metrics}")
+
+            sf.write(final_output_file, final_audio, match_sr, subtype="PCM_24")
 
         # 3. Upload final result directly to presigned PUT upload_url
         upload_file(upload_url, final_output_file)
@@ -472,7 +391,7 @@ def handler(event: dict) -> dict:
             "status": "COMPLETED",
             "job_id": job_id,
             "engine": engine,
-            "preset": preset,
+            "preset": resolved_preset_name,
             "duration": duration,
             "message": "Mastering completed and uploaded successfully.",
         }

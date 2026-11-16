@@ -22,7 +22,10 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Pre-download AudioSR model weights during Docker build to minimize RunPod cold start latency
 RUN python -c "from audiosr import build_model; build_model(model_name='basic')"
 
-# Copy worker application code and target curves
+# Copy worker application code, chain, presets, and target curves
+COPY chain.py /app/chain.py
+COPY presets/ /app/presets/
+COPY targets/ /app/targets/
 COPY . /app
 
 # Start the RunPod serverless worker handler

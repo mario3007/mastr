@@ -1,0 +1,13 @@
+{
+  "name": "club_punch",
+  "matchering": { "targets": ["club_punch.wav"], "target_lufs": -11.5 },
+  "eq": [
+    { "type": "low_shelf", "freq": 90, "gain_db": 1.5, "q": 0.7 },
+    { "type": "peak", "freq": 300, "gain_db": -1.5, "q": 1.0 },
+    { "type": "peak", "freq": 3500, "gain_db": 0.8, "q": 1.0 },
+    { "type": "high_shelf", "freq": 10000, "gain_db": 1.0, "q": 0.7 }
+  ],
+  "comp": { "threshold_db": -18.0, "ratio": 1.8, "attack_ms": 25.0, "release_ms": 150.0 },
+  "saturation": { "drive_db": 2.0, "mix": 0.5 },
+  "output": { "target_lufs": -9.5, "true_peak_db": -1.0 }
+}

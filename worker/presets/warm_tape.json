@@ -1,0 +1,12 @@
+{
+  "name": "warm_tape",
+  "matchering": { "targets": ["warm_tape.wav"], "target_lufs": -12.0 },
+  "eq": [
+    { "type": "low_shelf", "freq": 110, "gain_db": 1.3, "q": 0.65 },
+    { "type": "peak", "freq": 400, "gain_db": -1.0, "q": 1.0 },
+    { "type": "high_shelf", "freq": 8500, "gain_db": -0.5, "q": 0.7 }
+  ],
+  "comp": { "threshold_db": -20.0, "ratio": 1.7, "attack_ms": 35.0, "release_ms": 180.0 },
+  "saturation": { "drive_db": 3.2, "mix": 0.55 },
+  "output": { "target_lufs": -11.0, "true_peak_db": -1.0 }
+}
