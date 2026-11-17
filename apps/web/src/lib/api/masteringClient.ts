@@ -369,13 +369,13 @@ export async function pollRunPodJobStatus(
   targetLufs?: number,
   onProgress?: (progress: number, stepKey: string) => void
 ): Promise<MasteringJobStatus> {
-  const maxAttempts = 120; // Up to 3 minutes
+  const maxAttempts = 240; // Up to 6 minutes (240 * 1.5s = 360s)
   let attempts = 0;
 
   return new Promise((resolve) => {
     const interval = setInterval(async () => {
       attempts++;
-      const currentPct = Math.min(15 + attempts * 5, 95);
+      const currentPct = Math.min(15 + Math.round((attempts / maxAttempts) * 80), 95);
       if (onProgress) {
         onProgress(currentPct, 'phaseMastering');
       }
@@ -426,7 +426,7 @@ export async function pollRunPodJobStatus(
           jobId,
           status: 'failed',
           progress: 0,
-          error: 'GPU Mastering Timeout: Der Serverless Worker hat nach 3 Minuten nicht geantwortet.',
+          error: 'GPU Mastering Timeout: Der Serverless Worker hat nach 6 Minuten nicht geantwortet.',
         });
       }
     }, 1500);

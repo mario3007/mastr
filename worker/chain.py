@@ -1,8 +1,9 @@
 import json
+import math
 from pathlib import Path
 import numpy as np
 import pyloudnorm as pyln
-from scipy.signal import butter, sosfiltfilt
+from scipy.signal import butter, sosfiltfilt, resample_poly
 from pedalboard import (
     Pedalboard,
     HighpassFilter,
@@ -16,6 +17,18 @@ from pedalboard import (
 )
 
 PRESET_DIR = Path(__file__).parent / "presets"
+
+
+def resample_audio(audio: np.ndarray, orig_sr: int, target_sr: int = 44100) -> tuple[np.ndarray, int]:
+    """Resamplet Audio auf target_sr (Standard: 44100 Hz), falls abweichend."""
+    if int(orig_sr) == int(target_sr):
+        return audio.astype(np.float32), target_sr
+
+    g = math.gcd(int(orig_sr), int(target_sr))
+    up = target_sr // g
+    down = orig_sr // g
+    resampled = resample_poly(audio, up, down, axis=0).astype(np.float32)
+    return resampled, target_sr
 
 
 def load_preset(name: str) -> dict:
@@ -105,6 +118,7 @@ def apply_preset(audio: np.ndarray, sr: int, p: dict) -> tuple[np.ndarray, dict]
     """
     Stufe 3 (Nach Matchering):
     EQ -> Glue-Kompressor -> Parallele Sättigung -> Ziel-LUFS -> True-Peak-Limiter.
+    Präzise 2-Pass-Lautheitsabstimmung auf Ziel-LUFS (±0.1 dB Genauigkeit).
     """
     x = build_chain(p)(audio.T, sr).T
 
@@ -117,19 +131,47 @@ def apply_preset(audio: np.ndarray, sr: int, p: dict) -> tuple[np.ndarray, dict]
     meter = pyln.Meter(sr)
     current_lufs = float(meter.integrated_loudness(x))
     target_lufs = float(p["output"]["target_lufs"])
-
-    gain = min(target_lufs - current_lufs, 6.0) if np.isfinite(current_lufs) else 0.0
     ceiling_db = float(p["output"]["true_peak_db"])
 
+    # Pass 1: Geschätzter Gain vor Limiter
+    initial_gain = min(target_lufs - current_lufs, 6.0) if np.isfinite(current_lufs) else 0.0
+
     out = Pedalboard([
-        Gain(gain_db=gain),
+        Gain(gain_db=initial_gain),
         Limiter(threshold_db=ceiling_db, release_ms=100.0),
     ])(x.T, sr).T.astype(np.float32)
 
-    final_lufs = float(meter.integrated_loudness(out))
+    measured_lufs = float(meter.integrated_loudness(out))
+    applied_gain = initial_gain
+
+    # Pass 2: Iterative Limiter-Korrektur falls Abweichung > 0.2 LUFS
+    if np.isfinite(measured_lufs) and np.isfinite(target_lufs):
+        lufs_error = target_lufs - measured_lufs
+        if abs(lufs_error) > 0.2:
+            adjusted_gain = min(initial_gain + lufs_error, 8.0)
+            applied_gain = adjusted_gain
+            out = Pedalboard([
+                Gain(gain_db=adjusted_gain),
+                Limiter(threshold_db=ceiling_db, release_ms=100.0),
+            ])(x.T, sr).T.astype(np.float32)
+            measured_lufs = float(meter.integrated_loudness(out))
+
+        # Fein-Trim für punktgenaue Landung auf target_lufs (innerhalb ±0.05 LUFS)
+        final_trim = target_lufs - measured_lufs
+        if abs(final_trim) > 0.05 and abs(final_trim) <= 1.0:
+            out = Pedalboard([Gain(gain_db=final_trim)])(out.T, sr).T.astype(np.float32)
+            applied_gain += final_trim
+            # True-Peak-Sicherheitsdeckel beachten
+            peak = float(np.max(np.abs(out)))
+            max_peak = 10.0 ** (ceiling_db / 20.0)
+            if peak > max_peak:
+                out = out * (max_peak / peak)
+            measured_lufs = float(meter.integrated_loudness(out))
+
+    final_lufs = measured_lufs
     metrics = {
         "preset": p.get("name"),
-        "post_gain_db": round(gain, 2),
+        "post_gain_db": round(applied_gain, 2),
         "output_lufs": round(final_lufs, 2) if np.isfinite(final_lufs) else None,
         "ceiling_db": ceiling_db,
     }

@@ -23,7 +23,7 @@ from pedalboard import Pedalboard, HighpassFilter, Compressor, Limiter
 from pedalboard.io import AudioFile
 import matchering as mg
 
-from chain import load_preset, prepare_input, apply_preset
+from chain import load_preset, prepare_input, apply_preset, resample_audio
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -351,6 +351,11 @@ def handler(event: dict) -> dict:
             audio_data, sr = sf.read(source_for_mastering, dtype="float32")
             if audio_data.ndim == 1:
                 audio_data = np.column_stack([audio_data, audio_data])
+
+            # Vor Stage 1: Auf 44.1 kHz resamplen, falls abweichend (z. B. 48 kHz von Suno/Udio)
+            if sr != 44100:
+                logger.info(f"Resampling source audio from {sr} Hz to 44100 Hz before Stage 1...")
+                audio_data, sr = resample_audio(audio_data, sr, target_sr=44100)
 
             # Stufe 1 (Vor Matchering): 30 Hz Low-Cut, Bass-Mono < 120 Hz, Input-Gain-Absenkung
             cleaned, in_metrics = prepare_input(audio_data, sr)

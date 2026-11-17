@@ -24,9 +24,9 @@ if str(_WORKER_PATH) not in sys.path:
     sys.path.insert(0, str(_WORKER_PATH))
 
 try:
-    from chain import load_preset, prepare_input, apply_preset
+    from chain import load_preset, prepare_input, apply_preset, resample_audio
 except ImportError:
-    from worker.chain import load_preset, prepare_input, apply_preset
+    from worker.chain import load_preset, prepare_input, apply_preset, resample_audio
 
 
 @dataclass
@@ -124,6 +124,9 @@ class AudioMasteringEngine:
         data, sr = sf.read(str(input_audio_path), dtype="float32")
         if data.ndim == 1:
             data = np.column_stack([data, data])
+
+        if sr != 44100:
+            data, sr = resample_audio(data, sr, target_sr=44100)
 
         # 1. Preset aus zentralen Presets laden
         preset_name = getattr(params, "preset", "vocal_pop") or "vocal_pop"

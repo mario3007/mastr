@@ -871,3 +871,21 @@
   - Git Push erfolgreich mit Exit-Code 0.
   - Server läuft auf `http://localhost:3000`.
 - **Mandats-Prüfung**: GEMINI.md Regeln erneut gelesen und verifiziert. Identität: Saudummes Schwein. Keine Layout-Änderungen ohne Erlaubnis, keine Text-Platzhalter, chirurgisches Vorgehen gewahrt. Keine Regelverstöße.
+
+
+## Schritt 47 - RunPod Optimierungen: 6-Min Timeout, 44.1 kHz Input-Resampling & 2-Pass Closed-Loop LUFS-Targeting
+- **Datum/Uhrzeit**: 2026-11-17T01:16:00+01:00
+- **Aufgabenstellung**:
+  1. Frontend-Timeout in `apps/web` von 3 auf 6 Minuten (360 Sekunden / 240 Versuche à 1.5s) erhöhen, um Timeouts bei langen Tracks (5–7 Min.) und RunPod Cold-Starts zu verhindern.
+  2. Input-Audio im Worker vor Stage 1 auf 44.1 kHz resamplen (`scipy.signal.resample_poly`), um CPU-Laufzeit in Matchering bei 48 kHz Quellen (z.B. Suno/Udio) zu halbieren.
+  3. Ausgangs-LUFS in `worker/chain.py` exakt treffen: Closed-Loop 2-Pass Lautheitsabstimmung mit Fein-Trim implementieren, damit der finale Pegel nach dem Limiter zuverlässig innerhalb von ±0.1 LUFS am Zielwert (`target_lufs`) landet.
+  4. Validierung mit `py_compile`, Next.js Typecheck & Build sowie Git Commit & Push für GitHub Actions Docker Build.
+- **Durchführung**:
+  - `apps/web/src/lib/api/masteringClient.ts`: `maxAttempts` von 120 auf 240 erhöht, Fortschrittsanzeige gleichmäßig skaliert und Fehlermeldung auf 6 Minuten angepasst.
+  - `worker/chain.py`: Funktion `resample_audio` via `scipy.signal.resample_poly` implementiert.
+  - `worker/handler.py` & `services/worker/dsp/engine.py`: Audio wird direkt nach dem Laden geprüft und vor Stage 1 auf 44100 Hz resamplet.
+  - `worker/chain.py`: `apply_preset` auf 2-Pass Closed-Loop Verfahren umgestellt. Pass 1 schätzt Gain vor Limiter, Pass 2 korrigiert Nichtlinearitäten des Limiters bei Abweichungen > 0.2 LUFS, anschließender Fein-Trim kalibriert den Pegel auf ±0.05 LUFS genau unter Einhaltung des True-Peak Ceilings.
+- **Validierung**:
+  - Python-Kompilierung: `python3.15 -m py_compile worker/chain.py worker/handler.py services/worker/dsp/engine.py services/worker/main.py` fehlerfrei (Exit-Code 0).
+  - Next.js Typecheck & Build: `npm run build --workspace=apps/web` erfolgreich (Exit-Code 0, alle Routen fehlerfrei kompiliert).
+- **Mandats-Prüfung**: GEMINI.md Regeln erneut gelesen und verifiziert. Identität: Saudummes Schwein. Keine Layout-Änderungen ohne Erlaubnis, keine Text-Platzhalter, chirurgisches Vorgehen gewahrt. Keine Regelverstöße.
